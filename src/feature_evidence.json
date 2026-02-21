@@ -1,0 +1,65 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-change-the-subtitle-text-styling-to-use-light-colored-text-on-a-dark-background-for-improved-readability-apply-this-change-to-the-hero-section-subtitle-where-contrast-is-currently-poor",
+      "featureTitle": "Change the subtitle text styling to use light-colored text on a dark background for improved readability. Apply this change to the hero section subtitle where contrast is currently poor.",
+      "files": [
+        "frontend/src/pages/Gallery.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-walter-russell-quote-at-the-beginning-of-the-website-introduction-section-the-quote-should-be-taken-from-the-original-website-at-https-lichtkunst-mydurable-com-and-displayed-prominently-before-other-introductory-content",
+      "featureTitle": "Add a Walter Russell quote at the beginning of the website introduction section. The quote should be taken from the original website at https://lichtkunst.mydurable.com/ and displayed prominently before other introductory content.",
+      "files": [
+        "frontend/src/pages/Gallery.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-prominent-notice-at-the-top-of-the-website-stating-that-all-artworks-are-nfts-on-the-internet-computer-protocol-icp-this-notice-should-be-highly-visible-and-appear-before-the-main-content-to-inform-visitors-immediately",
+      "featureTitle": "Add a prominent notice at the top of the website stating that all artworks are NFTs on the Internet Computer Protocol (ICP). This notice should be highly visible and appear before the main content to inform visitors immediately.",
+      "files": [
+        "frontend/src/components/Layout.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "frontend/src/App.tsx": "Main application component with TanStack Router setup, defining routes for gallery, artwork detail, and upload pages with theme provider integration.",
+  "frontend/src/pages/Gallery.tsx": "Gallery page with hero section featuring improved subtitle readability (light text on dark semi-transparent background), Walter Russell quote section about light and rhythm, and artwork grid displaying all pieces as NFTs.",
+  "frontend/src/pages/ArtworkDetail.tsx": "Artwork detail page showing full-size image, metadata, and NFT information with back navigation.",
+  "frontend/src/pages/Upload.tsx": "Admin-only upload page with form for artwork submission, file upload with progress tracking, and automatic NFT minting.",
+  "frontend/src/components/Layout.tsx": "Main layout wrapper with header (logo, navigation, login), prominent NFT notice banner in German stating all artworks are NFTs on ICP, main content area, and footer with attribution.",
+  "frontend/src/components/Navigation.tsx": "Navigation component with links to gallery and upload (admin-only), showing active state.",
+  "frontend/src/components/LoginButton.tsx": "Internet Identity login/logout button with loading states and error handling.",
+  "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog for first-time user profile setup, preventing flash with proper loading state management.",
+  "frontend/src/components/ArtworkCard.tsx": "Gallery card component displaying artwork thumbnail, title, description, and NFT badge with hover effects.",
+  "frontend/src/components/NFTBadge.tsx": "Small badge component indicating NFT status with sparkle icon.",
+  "frontend/src/components/NFTInfo.tsx": "Detailed NFT information card showing token ID, minting date, and blockchain details.",
+  "frontend/src/hooks/useGetAllArtworks.ts": "React Query hook for fetching all artworks from backend.",
+  "frontend/src/hooks/useGetArtwork.ts": "React Query hook for fetching single artwork by ID.",
+  "frontend/src/hooks/useUploadArtwork.ts": "Mutation hook for uploading artwork with ExternalBlob, properly converting Uint8Array types and tracking upload progress.",
+  "frontend/src/hooks/useGetCallerUserProfile.ts": "Query hook for fetching caller's user profile with proper loading state to prevent modal flash.",
+  "frontend/src/hooks/useSaveCallerUserProfile.ts": "Mutation hook for saving caller's user profile.",
+  "frontend/src/hooks/useIsCallerAdmin.ts": "Query hook checking if caller has admin permissions.",
+  "frontend/src/index.css": "Global styles with warm, luminous OKLCH color palette for light art aesthetic, custom fonts (Playfair Display serif, Inter sans-serif).",
+  "frontend/tailwind.config.js": "Tailwind configuration with custom color tokens, elegant typography (Playfair Display, Inter), varied border radius, and custom animations."
+}

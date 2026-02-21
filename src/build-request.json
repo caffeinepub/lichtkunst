@@ -1,0 +1,80 @@
+{
+  "kind": "build_request",
+  "title": "Improve subtitle readability, add Walter Russell quote, and add prominent NFT notice",
+  "projectName": "Lichtkunst Portfolio",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-7",
+      "text": "Change the subtitle text styling to use light-colored text on a dark background for improved readability. Apply this change to the hero section subtitle where contrast is currently poor.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-last"
+        ],
+        "quotes": [
+          "nur den Untertitel kann man nicht lesen, weil helle Schrift auf Hintergrund. Ich hätte gerne helle Schrift auf dunklem Hintergrund"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Subtitle text uses light color (white or near-white)",
+        "Subtitle background is dark enough to provide strong contrast",
+        "Text remains readable across all screen sizes"
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Add a Walter Russell quote at the beginning of the website introduction section. The quote should be taken from the original website at https://lichtkunst.mydurable.com/ and displayed prominently before other introductory content.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-last"
+        ],
+        "quotes": [
+          "Beginne die Einleitung auf die Website mit einem Zitat von Walter Russell, entnommen von der alten Website"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Walter Russell quote is displayed at the start of the introduction section",
+        "Quote text matches content from the original lichtkunst.mydurable.com website",
+        "Quote is visually distinguished from regular text (e.g., larger font, different styling, quotation marks)",
+        "Quote appears before other introductory content"
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Add a prominent notice at the top of the website stating that all artworks are NFTs on the Internet Computer Protocol (ICP). This notice should be highly visible and appear before the main content to inform visitors immediately.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-last"
+        ],
+        "quotes": [
+          "Es soll ein ausdrücklicher Hinweis einleiten, daß alle Kunstwerke NFTs auf der ICP sind"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Notice clearly states that all artworks are NFTs on ICP",
+        "Notice is positioned prominently at or near the top of the page",
+        "Notice is visually distinct and immediately noticeable to visitors",
+        "Text is in German to match user's language preference"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify Internet Identity authentication hooks (frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts)",
+    "Do not modify Shadcn UI components in frontend/src/components/ui",
+    "Keep existing NFT minting backend logic intact",
+    "Preserve all existing artwork upload and gallery functionality"
+  ],
+  "nonGoals": [
+    "Implementing actual NFT minting functionality (separate complex task)",
+    "Adding ICP cost calculations or technical minting details to the UI",
+    "Modifying the backend NFT data model",
+    "Creating new pages or navigation structure"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

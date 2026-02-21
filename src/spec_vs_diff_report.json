@@ -1,0 +1,15 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-21T20:36:16.502Z",
+  "summary": "All three requirements (REQ-7, REQ-8, REQ-9) are fully implemented in the diff. The subtitle styling has been updated with light text on dark semi-transparent background, the Walter Russell quote has been added as a dedicated section before the gallery, and a prominent German-language NFT notice banner appears at the top of the layout. No missing requirements or hallucinated features detected.",
+  "missing_requirements": [],
+  "hallucinated_features": [],
+  "confidence": 0.95,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/components/Layout.tsx",
+    "frontend/src/pages/Gallery.tsx",
+    "project_state.json"
+  ]
+}

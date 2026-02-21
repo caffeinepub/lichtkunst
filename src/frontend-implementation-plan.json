@@ -1,0 +1,57 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Improve subtitle readability, add Walter Russell quote, and add prominent NFT notice",
+  "requirements": [
+    {
+      "id": "REQ-7",
+      "summary": "Change subtitle text styling to use light-colored text on a dark background for improved readability in the hero section",
+      "acceptanceCriteria": [
+        "Subtitle text uses light color (white or near-white)",
+        "Subtitle background is dark enough to provide strong contrast",
+        "Text remains readable across all screen sizes"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Gallery.tsx",
+          "operation": "modify",
+          "description": "Modify the hero section subtitle styling to use light text (text-gray-100 or text-white) with a dark semi-transparent background overlay (bg-black/60 or similar) applied via Tailwind classes to ensure strong contrast against the hero image background. Ensure the background spans the full width of the subtitle text and provides adequate padding for readability."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Add a Walter Russell quote at the beginning of the website introduction section, displayed prominently before other introductory content",
+      "acceptanceCriteria": [
+        "Walter Russell quote is displayed at the start of the introduction section",
+        "Quote text matches content from the original lichtkunst.mydurable.com website",
+        "Quote is visually distinguished from regular text (e.g., larger font, different styling, quotation marks)",
+        "Quote appears before other introductory content"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Gallery.tsx",
+          "operation": "modify",
+          "description": "Add a Walter Russell quote section immediately after the hero section and before the artwork grid. The quote should be sourced from https://lichtkunst.mydurable.com/ and styled distinctively using larger text (text-xl or text-2xl), italic font styling, quotation marks or blockquote formatting, and centered alignment. Include attribution to Walter Russell below the quote in smaller text. Use Tailwind classes to create visual separation with appropriate padding and margins."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Add a prominent notice at the top of the website stating that all artworks are NFTs on the Internet Computer Protocol (ICP)",
+      "acceptanceCriteria": [
+        "Notice clearly states that all artworks are NFTs on ICP",
+        "Notice is positioned prominently at or near the top of the page",
+        "Notice is visually distinct and immediately noticeable to visitors",
+        "Text is in German to match user's language preference"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Add a prominent NFT notice banner immediately after the header (before the main content area). The notice should be in German, stating that all artworks are NFTs on the Internet Computer Protocol (ICP). Style it with high visibility using a distinct background color (e.g., bg-accent or bg-primary with contrasting text), full-width display, centered text, and appropriate padding. Consider using an icon or badge to enhance visibility. The banner should be persistent across all pages since it's in the Layout component."
+        }
+      ]
+    }
+  ]
+}

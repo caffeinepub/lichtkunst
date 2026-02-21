@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 5,
+  "summary": "Light art portfolio website with automatic NFT minting for all images, graphics, and logos on ICP blockchain",
+  "architectural_notes": [
+    "ICP canister-based hosting for decentralized website deployment",
+    "NFT smart contract integration for automated asset tokenization",
+    "Frontend canister for serving web content",
+    "Backend canister for NFT minting logic and blockchain interactions",
+    "NFT minting on ICP requires integration with standards like EXT, ICRC-7, or DIP721",
+    "NFT functionality requires separate NFT canister with wallet integration and marketplace connectivity"
+  ],
+  "known_issues": [
+    "Subtitle text currently has poor contrast (light on light background)",
+    "NFT minting functionality is not yet implemented - complex ICP blockchain integration required"
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-create-a-portfolio-website-inspired-by-https-lichtkunst-mydurable-com-with-improved-design-and-user-experience-the-site-should-showcase-light-art-with-a-modern-elegant-aesthetic-featuring-clean-layouts-smooth-animations-and-intuitive-navigation",
+      "title": "Create a portfolio website inspired by https://lichtkunst.mydurable.com/ with improved design and user experience. The site should showcase light art with a modern, elegant aesthetic featuring clean layouts, smooth animations, and intuitive navigation.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-artwork-upload-interface-where-the-user-can-add-new-light-art-pieces-with-title-description-and-image-file-upon-upload-automatically-trigger-nft-minting-for-the-artwork",
+      "title": "Create an artwork upload interface where the user can add new light art pieces with title, description, and image file. Upon upload, automatically trigger NFT minting for the artwork.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-display-nft-status-and-trading-information-for-each-artwork-in-the-portfolio-show-whether-the-piece-is-minted-as-an-nft-its-token-id-and-provide-basic-trading-functionality-or-links-to-marketplaces",
+      "title": "Display NFT status and trading information for each artwork in the portfolio. Show whether the piece is minted as an NFT, its token ID, and provide basic trading functionality or links to marketplaces.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-integrate-internet-identity-authentication-to-allow-the-portfolio-owner-to-manage-uploads-and-nft-minting-securely-public-visitors-can-browse-without-authentication",
+      "title": "Integrate Internet Identity authentication to allow the portfolio owner to manage uploads and NFT minting securely. Public visitors can browse without authentication.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-sophisticated-artistic-visual-design-that-reflects-the-nature-of-light-art-use-a-creative-color-palette-beyond-typical-blue-purple-schemes-with-elegant-typography-and-layout-that-emphasizes-the-artwork-while-maintaining-excellent-usability",
+      "title": "Apply a sophisticated, artistic visual design that reflects the nature of light art. Use a creative color palette beyond typical blue/purple schemes, with elegant typography and layout that emphasizes the artwork while maintaining excellent usability.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-change-the-subtitle-text-styling-to-use-light-colored-text-on-a-dark-background-for-improved-readability-apply-this-change-to-the-hero-section-subtitle-where-contrast-is-currently-poor",
+      "title": "Change the subtitle text styling to use light-colored text on a dark background for improved readability. Apply this change to the hero section subtitle where contrast is currently poor.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-walter-russell-quote-at-the-beginning-of-the-website-introduction-section-the-quote-should-be-taken-from-the-original-website-at-https-lichtkunst-mydurable-com-and-displayed-prominently-before-other-introductory-content",
+      "title": "Add a Walter Russell quote at the beginning of the website introduction section. The quote should be taken from the original website at https://lichtkunst.mydurable.com/ and displayed prominently before other introductory content.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-prominent-notice-at-the-top-of-the-website-stating-that-all-artworks-are-nfts-on-the-internet-computer-protocol-icp-this-notice-should-be-highly-visible-and-appear-before-the-main-content-to-inform-visitors-immediately",
+      "title": "Add a prominent notice at the top of the website stating that all artworks are NFTs on the Internet Computer Protocol (ICP). This notice should be highly visible and appear before the main content to inform visitors immediately.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Portfolio website inspired by lichtkunst.mydurable.com but improved",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Automatic NFT minting for all images, graphics, and logos on ICP blockchain",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Implement backend functionality to automatically mint NFTs on the Internet Computer Protocol (ICP) for all uploaded images, graphics, and logos. Each artwork should be tokenized as a unique NFT with metadata including title, description, and creation date.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Change subtitle to light text on dark background for better readability",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add Walter Russell quote from old website at the beginning of the site introduction",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add prominent notice at the top stating that all artworks are NFTs on ICP",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Lichtkunst",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
