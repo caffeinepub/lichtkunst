@@ -1,0 +1,50 @@
+{
+  "kind": "build_request",
+  "title": "Add NFT collections to Werkverzeichnis with preview images and Getgems links",
+  "projectName": "Istvan Seidel Lichtkunst",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Update NFTCollectionsSection.tsx to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each card must link directly to its Getgems collection URL (opening in a new tab) and display a dedicated preview image from frontend/public/assets/generated.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "https://getgems.io/lichtei, https://getgems.io/wheeloftime und https://getgems.io/colourshades",
+          "Schieferlichtgrafik: https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM, light seekers: https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz, panel paintings: https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV und Flammenbilder fire dance: https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All seven collection cards are visible in the NFT collections section",
+        "Each card shows the correct collection name and a unique preview image",
+        "Clicking a card opens the exact Getgems URL for that collection in a new browser tab",
+        "No collection is missing or has a wrong URL",
+        "Preview images are loaded from frontend/public/assets/generated"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not change the Getgems URLs — use them exactly as provided by the user",
+    "Do not route generated preview images through the backend"
+  ],
+  "nonGoals": [
+    "Adding new backend data models or admin CRUD for these static collections",
+    "Fetching live NFT data from the Getgems API",
+    "Changing the overall layout or design of the NFTCollectionsSection beyond updating collection data and images"
+  ],
+  "imageRequirements": {
+    "required": [
+      "Abstract glowing egg sculpture with radiant light beams and golden tones on a dark background, representing light art (nft-preview-lichtei.dim_600x400.png)",
+      "Mystical spinning wheel constructed from luminous colored light trails against a deep cosmic background (nft-preview-wheeloftime.dim_600x400.png)",
+      "Spectrum of vivid color gradients dissolving into each other like stained glass illuminated from within (nft-preview-colourshades.dim_600x400.png)",
+      "Textured slate surface with engraved light patterns and glowing geometric lines etched into stone (nft-preview-schieferlichtgrafik.dim_600x400.png)",
+      "Abstract human silhouettes reaching upward toward beams of ascending radiant light in a dark void (nft-preview-lightseekers.dim_600x400.png)",
+      "Luminous rectangular panels arranged in a grid, each glowing with a different intense color of light (nft-preview-panelpaintings.dim_600x400.png)",
+      "Dynamic swirling flames rendered in vivid orange, red, and gold light trails dancing against a black background (nft-preview-firedance.dim_600x400.png)"
+    ],
+    "edits": []
+  }
+}

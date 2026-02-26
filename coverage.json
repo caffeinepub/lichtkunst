@@ -1,0 +1,44 @@
+{
+  "kind": "coverage_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-26T23:09:20.160Z",
+  "sources": {
+    "buildRequest": true,
+    "implementationPlan": true
+  },
+  "requirements": {
+    "total": 1,
+    "implemented": 1,
+    "items": [
+      {
+        "id": "REQ-1",
+        "summary": "Update NFTCollectionsSection.tsx to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each card must link directly to its Getgems collection URL (opening in a new tab) and display a dedicated preview image from frontend/public/assets/generated.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/NFTCollectionsSection.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/NFTCollectionsSection.tsx"
+        ]
+      }
+    ]
+  },
+  "changedFiles": [
+    "build-request.json",
+    "feature_evidence.json",
+    "frontend-file-summaries.txt",
+    "frontend-implementation-plan.json",
+    "frontend/public/assets/generated/nft-preview-colourshades.dim_600x400.png",
+    "frontend/public/assets/generated/nft-preview-firedance.dim_600x400.png",
+    "frontend/public/assets/generated/nft-preview-lichtei.dim_600x400.png",
+    "frontend/public/assets/generated/nft-preview-lightseekers.dim_600x400.png",
+    "frontend/public/assets/generated/nft-preview-panelpaintings.dim_600x400.png",
+    "frontend/public/assets/generated/nft-preview-schieferlichtgrafik.dim_600x400.png",
+    "frontend/public/assets/generated/nft-preview-wheeloftime.dim_600x400.png",
+    "frontend/src/components/NFTCollectionsSection.tsx",
+    "project_state.json",
+    "scratch/component-selection.json",
+    "spec.md",
+    "spec_vs_diff_report.json"
+  ]
+}

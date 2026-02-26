@@ -1,0 +1,23 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-26T23:09:20.157Z",
+  "summary": "The diff updates NFTCollectionsSection.tsx with all seven collections and their exact Getgems URLs. All URLs match the requirements. However, the image filenames used in the code do not match the specified filenames from the build request, and no image files were added to the repository.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Preview images must be loaded from frontend/public/assets/generated using the specified filenames (nft-preview-lichtei.dim_600x400.png, nft-preview-wheeloftime.dim_600x400.png, nft-preview-colourshades.dim_600x400.png, nft-preview-schieferlichtgrafik.dim_600x400.png, nft-preview-lightseekers.dim_600x400.png, nft-preview-panelpaintings.dim_600x400.png, nft-preview-firedance.dim_600x400.png)",
+      "reason": "The code uses different filenames (e.g., lichtei-preview.dim_800x600.png, wheeloftime-preview.dim_800x600.png, light-seekers-preview.dim_800x600.png) instead of the exact names specified in the build request. Additionally, no image files were added in the diff (ADDED FILES: none), so the actual image assets are missing from frontend/public/assets/generated.",
+      "evidence": [
+        "frontend/src/components/NFTCollectionsSection.tsx"
+      ]
+    }
+  ],
+  "hallucinated_features": [],
+  "confidence": 0.85,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/components/NFTCollectionsSection.tsx",
+    "project_state.json"
+  ]
+}

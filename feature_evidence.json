@@ -1,0 +1,25 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-update-nftcollectionssection-tsx-to-include-all-seven-nft-collections-with-their-exact-getgems-urls-lichtei-https-getgems-io-lichtei-wheel-of-time-https-getgems-io-wheeloftime-colour-shades-https-getgems-io-colourshades-schieferlichtgrafik-https-getgems-io-collection-eqcgrhxomaryukslltlh5dsxyt-h2df6vlieuiwsj05kfjjm-light-seekers-https-getgems-io-collection-eqa1w-yi6igmi-94koigwgd79i-bhz0uot-z1y5w8fbguiaz-panel-paintings-https-getgems-io-collection-eqa-bfpwkniqoaatwojdfidk9x7-mcw-stpzt-1kdsf6udyv-and-flammenbilder-fire-dance-https-getgems-io-collection-eqa8b4visumrk2tiumri-wmlm3qhahogegnqsyzro6s9o2vf-each-card-must-link-directly-to-its-getgems-collection-url-opening-in-a-new-tab-and-display-a-dedicated-preview-image-from-frontend-public-assets-generated",
+      "featureTitle": "Update NFTCollectionsSection.tsx to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each card must link directly to its Getgems collection URL (opening in a new tab) and display a dedicated preview image from frontend/public/assets/generated.",
+      "files": [
+        "frontend/src/components/NFTCollectionsSection.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

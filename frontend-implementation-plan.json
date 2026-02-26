@@ -1,0 +1,25 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Add NFT collections to Werkverzeichnis with preview images and Getgems links",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Update NFTCollectionsSection.tsx to display all seven NFT collections with exact Getgems URLs and dedicated preview images from generated assets",
+      "acceptanceCriteria": [
+        "All seven collection cards are visible in the NFT collections section",
+        "Each card shows the correct collection name and a unique preview image",
+        "Clicking a card opens the exact Getgems URL for that collection in a new browser tab",
+        "No collection is missing or has a wrong URL",
+        "Preview images are loaded from frontend/public/assets/generated"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/NFTCollectionsSection.tsx",
+          "operation": "modify",
+          "description": "Update the collections array to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each collection must reference its corresponding preview image from frontend/public/assets/generated using the exact workspace paths: frontend/public/assets/generated/lichtei-preview.dim_800x600.png, frontend/public/assets/generated/wheeloftime-preview.dim_800x600.png, frontend/public/assets/generated/colourshades-preview.dim_800x600.png, frontend/public/assets/generated/schieferlichtgrafik-preview.dim_800x600.png, frontend/public/assets/generated/light-seekers-preview.dim_800x600.png, frontend/public/assets/generated/panel-paintings-preview.dim_800x600.png, and frontend/public/assets/generated/fire-dance-preview.dim_800x600.png. Each collection card must link directly to its Getgems URL with target='_blank' to open in a new tab. Do not change the NFTCollectionCard component's interface or behavior beyond providing the correct image paths and URLs."
+        }
+      ]
+    }
+  ]
+}

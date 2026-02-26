@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Website/portfolio for light artist Istvan Seidel featuring his NFT collections on the TON Blockchain (Getgems). The project includes a Werkverzeichnis (catalogue of works) with linked NFT collections.",
+  "architectural_notes": [
+    "NFT collections are hosted on TON Blockchain via Getgems (getgems.io). Links must not be changed.",
+    "Two Getgems accounts: main account (lichtei, wheeloftime, colourshades) and secondary account (Schieferlichtgrafik, light seekers, panel paintings, Flammenbilder fire dance)"
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Abstract glowing egg sculpture with radiant light beams and golden tones on a dark background, representing light art (nft-preview-lichtei.dim_600x400.png)\n- Mystical spinning wheel constructed from luminous colored light trails against a deep cosmic background (nft-preview-wheeloftime.dim_600x400.png)\n- Spectrum of vivid color gradients dissolving into each other like stained glass illuminated from within (nft-preview-colourshades.dim_600x400.png)\n- Textured slate surface with engraved light patterns and glowing geometric lines etched into stone (nft-preview-schieferlichtgrafik.dim_600x400.png)\n- Abstract human silhouettes reaching upward toward beams of ascending radiant light in a dark void (nft-preview-lightseekers.dim_600x400.png)\n- Luminous rectangular panels arranged in a grid, each glowing with a different intense color of light (nft-preview-panelpaintings.dim_600x400.png)\n- Dynamic swirling flames rendered in vivid orange, red, and gold light trails dancing against a black background (nft-preview-firedance.dim_600x400.png)",
+  "existing_features": [
+    {
+      "id": "feature-update-nftcollectionssection-tsx-to-include-all-seven-nft-collections-with-their-exact-getgems-urls-lichtei-https-getgems-io-lichtei-wheel-of-time-https-getgems-io-wheeloftime-colour-shades-https-getgems-io-colourshades-schieferlichtgrafik-https-getgems-io-collection-eqcgrhxomaryukslltlh5dsxyt-h2df6vlieuiwsj05kfjjm-light-seekers-https-getgems-io-collection-eqa1w-yi6igmi-94koigwgd79i-bhz0uot-z1y5w8fbguiaz-panel-paintings-https-getgems-io-collection-eqa-bfpwkniqoaatwojdfidk9x7-mcw-stpzt-1kdsf6udyv-and-flammenbilder-fire-dance-https-getgems-io-collection-eqa8b4visumrk2tiumri-wmlm3qhahogegnqsyzro6s9o2vf-each-card-must-link-directly-to-its-getgems-collection-url-opening-in-a-new-tab-and-display-a-dedicated-preview-image-from-frontend-public-assets-generated",
+      "title": "Update NFTCollectionsSection.tsx to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each card must link directly to its Getgems collection URL (opening in a new tab) and display a dedicated preview image from frontend/public/assets/generated.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Add NFT collections to Werkverzeichnis with preview images and direct links to Getgems: lichtei, wheeloftime, colourshades, Schieferlichtgrafik, light seekers, panel paintings, Flammenbilder fire dance",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Istvan Seidel Werkverzeichnis",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
