@@ -1,23 +1,15 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T22:01:10.255Z",
-  "summary": "The diff modifies frontend/src/pages/Gallery.tsx to address both requirements. REQ-2 (single static UZ quote, no Goethe, no carousel) is fully implemented. REQ-1 has the banner height set to h-[20vh] described as half of previous 40vh, satisfying the 50% reduction. However, the quote section has been moved outside the hero banner section into a separate section below it, whereas the original requirement specifies the quote should be inside the hero banner.",
-  "missing_requirements": [
-    {
-      "id": "REQ-2",
-      "requirement": "Update the rotating quotes section inside the hero banner on the Gallery page to display only the UZ quote — the quote should be positioned inside/overlaid on the hero banner.",
-      "reason": "The diff places the UZ quote in a separate section element below the hero banner image section rather than overlaid inside the banner. The original requirement states the quotes section was inside the hero banner.",
-      "evidence": [
-        "frontend/src/pages/Gallery.tsx"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-27T22:18:33.567Z",
+  "summary": "The diff implements fixes for both REQ-1 and REQ-2. The useIsCallerAdminWithTimeout hook was refactored to use an overall timeout covering both the actor-wait and admin-check phases, to skip the admin check when identity is not yet initialized or not authenticated, and to expose a retry callback and error/timedOut states. The AdminDashboard was updated to consume these new states and render appropriate UI for loading, timeout, error, and unauthenticated cases. Both read-only files (useInternetIdentity.ts and useActor.ts) appear untouched. All existing admin UI tabs (collections, NFT items) are preserved.",
+  "missing_requirements": [],
   "hallucinated_features": [],
-  "confidence": 0.72,
+  "confidence": 0.88,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/pages/Gallery.tsx",
+    "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+    "frontend/src/pages/AdminDashboard.tsx",
     "project_state.json"
   ]
 }

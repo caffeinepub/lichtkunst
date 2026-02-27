@@ -21,8 +21,9 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 15000): AdminCheckResult
   const [retryCount, setRetryCount] = useState(0);
 
   const mountedRef = useRef(true);
-  // Track which principal+retry combination we've already resolved
   const resolvedKeyRef = useRef<string | null>(null);
+  // Track the overall timeout that covers actor-wait + admin-check
+  const overallTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -32,11 +33,10 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 15000): AdminCheckResult
   }, []);
 
   const principalKey = identity?.getPrincipal().toString() ?? null;
-  // Include retryCount so a manual retry forces a new check
   const checkKey = principalKey ? `${principalKey}:${retryCount}` : null;
 
   useEffect(() => {
-    // Still initializing — keep loading
+    // Still initializing identity — keep loading, but start overall timeout
     if (isInitializing) {
       setIsLoading(true);
       return;
@@ -49,12 +49,11 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 15000): AdminCheckResult
       setTimedOut(false);
       setError(null);
       resolvedKeyRef.current = null;
-      return;
-    }
-
-    // Actor not ready yet — keep loading, don't mark as resolved
-    if (actorFetching || !actor) {
-      setIsLoading(true);
+      // Clear any pending overall timeout
+      if (overallTimeoutRef.current) {
+        clearTimeout(overallTimeoutRef.current);
+        overallTimeoutRef.current = null;
+      }
       return;
     }
 
@@ -69,49 +68,78 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 15000): AdminCheckResult
     setError(null);
     setIsLoading(true);
 
-    let cancelled = false;
-
-    const timeoutId = setTimeout(() => {
-      if (!cancelled && mountedRef.current) {
+    // Start the overall timeout as soon as we know the user is authenticated.
+    // This covers both the actor-wait phase and the actual admin-check phase.
+    if (overallTimeoutRef.current) {
+      clearTimeout(overallTimeoutRef.current);
+    }
+    overallTimeoutRef.current = setTimeout(() => {
+      if (mountedRef.current && resolvedKeyRef.current !== checkKey) {
         setTimedOut(true);
         setIsLoading(false);
-        // Don't mark as resolved on timeout so retry can work
       }
     }, timeoutMs);
+
+    // Actor not ready yet — keep loading, wait for actor
+    if (actorFetching || !actor) {
+      // The overall timeout above will fire if actor never becomes ready
+      return;
+    }
+
+    // Actor is ready — perform the admin check
+    let cancelled = false;
 
     actor
       .isCallerAdmin()
       .then((result) => {
-        clearTimeout(timeoutId);
         if (!cancelled && mountedRef.current) {
+          // Clear the overall timeout since we got a result
+          if (overallTimeoutRef.current) {
+            clearTimeout(overallTimeoutRef.current);
+            overallTimeoutRef.current = null;
+          }
           setIsAdmin(result);
           setIsLoading(false);
           setTimedOut(false);
-          // Mark this key as resolved so we don't re-check unnecessarily
           resolvedKeyRef.current = checkKey;
         }
       })
       .catch((err) => {
-        clearTimeout(timeoutId);
         if (!cancelled && mountedRef.current) {
+          // Clear the overall timeout since we got a result (error)
+          if (overallTimeoutRef.current) {
+            clearTimeout(overallTimeoutRef.current);
+            overallTimeoutRef.current = null;
+          }
           setError(err instanceof Error ? err : new Error(String(err)));
           setIsAdmin(false);
           setIsLoading(false);
-          // Don't mark as resolved on error so retry can work
         }
       });
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
-      // NOTE: Do NOT reset resolvedKeyRef here — if the check completed before
-      // cleanup, we want to keep the result. If it was cancelled mid-flight,
-      // resolvedKeyRef was never set, so the next render will re-run the check
-      // if dependencies change (e.g., actor becomes available again).
+      // Do NOT clear overallTimeoutRef here — it should persist across
+      // re-renders caused by actor/actorFetching changes so the timeout
+      // covers the entire wait period from authentication to resolution.
     };
   }, [actor, actorFetching, identity, isInitializing, principalKey, checkKey, timeoutMs]);
 
+  // Cleanup overall timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (overallTimeoutRef.current) {
+        clearTimeout(overallTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const retry = useCallback(() => {
+    // Clear any pending timeout before retry
+    if (overallTimeoutRef.current) {
+      clearTimeout(overallTimeoutRef.current);
+      overallTimeoutRef.current = null;
+    }
     resolvedKeyRef.current = null;
     setTimedOut(false);
     setError(null);

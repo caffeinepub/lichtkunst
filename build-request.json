@@ -1,55 +1,59 @@
 {
   "kind": "build_request",
-  "title": "Reduce hero banner height by half and show only one quote (UZ)",
-  "projectName": "Istvan Seidel Light Art",
-  "priority": "normal",
+  "title": "Fix Admin Dashboard infinite loading after Internet Identity login",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Reduce the hero banner image height on the Gallery page (frontend/src/pages/Gallery.tsx) to exactly half its current value. Adjust any related CSS classes or inline styles accordingly so the banner proportions and layout remain visually clean.",
+      "text": "Fix the Admin Dashboard page so it no longer hangs indefinitely after a successful Internet Identity login. The page currently shows an infinite loading state instead of rendering the admin tabs. Investigate and resolve the race condition or timeout issue in the admin authentication check (useIsCallerAdminWithTimeout) that causes the page to never transition out of the loading state in production.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-4",
+          "msg-5"
         ],
         "quotes": [
-          "Das Bannerbild bitte um die hälfte in der Höhe reduzieren"
+          "Es passiert einfach nichts, die Seite lädt ewig.",
+          "Ja, ich bin eingeloggt mit Internet Identity."
         ]
       },
       "acceptanceCriteria": [
-        "The hero banner section height is 50% of its previous height.",
-        "The banner image still fills the reduced height correctly (no white space or overflow).",
-        "Layout below the banner is not broken."
+        "After a successful Internet Identity login, navigating to the Admin Dashboard no longer shows an infinite loading spinner.",
+        "If the user is an admin, the admin tabs (collections, NFT items) are rendered correctly.",
+        "If the admin check call to the backend fails or times out, a clear error message or retry option is shown instead of an infinite spinner.",
+        "The fix works in the production (deployed) environment, not just local development."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Update the rotating quotes section inside the hero banner on the Gallery page (frontend/src/pages/Gallery.tsx) to display only the UZ quote (from Russell, 'Geheimnis des Lichtes'). Remove the Goethe quote and any rotation/carousel logic so that a single static quote is shown.",
+      "text": "Ensure the backend actor used in the Admin Dashboard is created with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. If the actor is being instantiated before the identity is fully available, add proper sequencing so the admin check only fires once an authenticated actor is ready.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-4",
+          "msg-5"
         ],
         "quotes": [
-          "Dann nur ein UZ"
+          "Es passiert einfach nichts, die Seite lädt ewig.",
+          "Ja, ich bin eingeloggt mit Internet Identity."
         ]
       },
       "acceptanceCriteria": [
-        "Only one quote is displayed in the banner — the Russell 'Geheimnis des Lichtes' (UZ) quote.",
-        "The Goethe quote is no longer shown.",
-        "No rotation animation or carousel indicator is present.",
-        "The quote text is legible against the banner background."
+        "The isCallerAdmin backend call is only triggered after both the Internet Identity login is complete and an authenticated actor instance is available.",
+        "No unauthenticated (anonymous) actor call is made for the admin check when the user is logged in.",
+        "The AdminDashboard does not enter an infinite loading state due to the actor not being ready."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files listed under frontend.immutablePaths.",
-    "Do not alter the backend."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts — treat them as read-only.",
+    "Do not change the backend Motoko actor logic or admin authorization rules.",
+    "Preserve all existing admin UI functionality (collection management, NFT management tabs)."
   ],
   "nonGoals": [
-    "Changing any other section of the Gallery page beyond the hero banner.",
-    "Modifying quote content/text beyond removing the Goethe entry.",
-    "Any backend changes."
+    "Adding new admin features or changing the admin UI layout.",
+    "Changing the Internet Identity authentication flow.",
+    "Modifying backend access control or principal management."
   ],
   "imageRequirements": {
     "required": [],

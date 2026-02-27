@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T22:01:10.260Z",
+  "generatedAt": "2026-02-27T22:18:33.571Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,24 +12,24 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Reduce the hero banner image height on the Gallery page (frontend/src/pages/Gallery.tsx) to exactly half its current value. Adjust any related CSS classes or inline styles accordingly so the banner proportions and layout remain visually clean.",
+        "summary": "Fix the Admin Dashboard page so it no longer hangs indefinitely after a successful Internet Identity login. The page currently shows an infinite loading state instead of rendering the admin tabs. Investigate and resolve the race condition or timeout issue in the admin authentication check (useIsCallerAdminWithTimeout) that causes the page to never transition out of the loading state in production.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Gallery.tsx"
+          "frontend/src/pages/AdminDashboard.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/Gallery.tsx"
+          "frontend/src/pages/AdminDashboard.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Update the rotating quotes section inside the hero banner on the Gallery page (frontend/src/pages/Gallery.tsx) to display only the UZ quote (from Russell, 'Geheimnis des Lichtes'). Remove the Goethe quote and any rotation/carousel logic so that a single static quote is shown.",
+        "summary": "Ensure the backend actor used in the Admin Dashboard is created with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. If the actor is being instantiated before the identity is fully available, add proper sequencing so the admin check only fires once an authenticated actor is ready.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/Gallery.tsx"
+          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
         ],
         "matchedFiles": [
-          "frontend/src/pages/Gallery.tsx"
+          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
         ]
       }
     ]
@@ -39,7 +39,8 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/Gallery.tsx",
+    "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+    "frontend/src/pages/AdminDashboard.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

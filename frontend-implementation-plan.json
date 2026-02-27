@@ -1,38 +1,38 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Reduce hero banner height by half and show only one quote (UZ)",
+  "title": "Fix Admin Dashboard infinite loading after Internet Identity login",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Reduce the hero banner image height on the Gallery page to exactly half its current value",
+      "summary": "Fix the Admin Dashboard infinite loading state by ensuring proper sequencing of authentication and admin check",
       "acceptanceCriteria": [
-        "The hero banner section height is 50% of its previous height.",
-        "The banner image still fills the reduced height correctly (no white space or overflow).",
-        "Layout below the banner is not broken."
+        "After a successful Internet Identity login, navigating to the Admin Dashboard no longer shows an infinite loading spinner.",
+        "If the user is an admin, the admin tabs (collections, NFT items) are rendered correctly.",
+        "If the admin check call to the backend fails or times out, a clear error message or retry option is shown instead of an infinite spinner.",
+        "The fix works in the production (deployed) environment, not just local development."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Gallery.tsx",
+          "path": "frontend/src/pages/AdminDashboard.tsx",
           "operation": "modify",
-          "description": "Update the hero banner section's height-related CSS classes or inline styles to reduce the current height by exactly 50%. If the banner uses h-[600px], change it to h-[300px]. If it uses h-screen, change to h-[50vh]. Ensure the background image (frontend/public/assets/generated/hero-light-art.dim_1920x1080.png) maintains proper cover/fill behavior. Verify that no visual artifacts (white space, overflow, or cut-off content) are introduced and that the layout elements below the banner remain properly positioned."
+          "description": "Refactor the AdminDashboard component to properly coordinate the authentication state from useInternetIdentity with the admin check from useIsCallerAdminWithTimeout. Ensure the admin check only runs when both the user is authenticated (identity exists) and the actor is ready (not fetching). Add proper error handling for timeout/failure cases with a retry button and clear error message. Replace the infinite loading spinner with a state machine that transitions correctly through: loading authentication → loading admin check → showing admin UI or showing access denied. Add a timeout error UI state that displays when the admin check times out, offering a retry action."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Display only the UZ quote (Russell 'Geheimnis des Lichtes') in the hero banner, removing the Goethe quote and all rotation logic",
+      "summary": "Ensure the admin check uses an authenticated actor and only fires after identity is fully available",
       "acceptanceCriteria": [
-        "Only one quote is displayed in the banner — the Russell 'Geheimnis des Lichtes' (UZ) quote.",
-        "The Goethe quote is no longer shown.",
-        "No rotation animation or carousel indicator is present.",
-        "The quote text is legible against the banner background."
+        "The isCallerAdmin backend call is only triggered after both the Internet Identity login is complete and an authenticated actor instance is available.",
+        "No unauthenticated (anonymous) actor call is made for the admin check when the user is logged in.",
+        "The AdminDashboard does not enter an infinite loading state due to the actor not being ready."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Gallery.tsx",
+          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Remove the rotating quotes array/state and carousel logic from the hero banner. Keep only the Russell 'Geheimnis des Lichtes' (UZ) quote as a static text element. Remove the Goethe quote entirely. Delete any interval timers, animation transitions, carousel indicators (dots), or state management related to quote rotation. Ensure the remaining single quote is properly styled, centered, and readable against the banner background. Remove any dependencies on quote rotation such as useEffect hooks, currentQuoteIndex state, or animation classes."
+          "description": "Update the useIsCallerAdminWithTimeout hook to depend on both the authenticated identity state from useInternetIdentity and the actor readiness from useActor. Ensure the query is only enabled when: (1) identity exists (user is logged in), (2) actor exists (backend connection ready), and (3) actor is not currently fetching. Add explicit guards to prevent the admin check from running with an anonymous or not-yet-ready actor. Improve the timeout mechanism to ensure it properly transitions from loading to timeout state without hanging. Add better error state management that distinguishes between timeout, network error, and authorization failure."
         }
       ]
     }

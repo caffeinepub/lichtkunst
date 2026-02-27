@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useIsCallerAdminWithTimeout } from '../hooks/useIsCallerAdminWithTimeout';
+import { useActor } from '../hooks/useActor';
 import AdminCollectionList from '../components/AdminCollectionList';
 import AdminNFTList from '../components/AdminNFTList';
 import AdminCollectionForm from '../components/AdminCollectionForm';
@@ -14,7 +15,8 @@ import type { NFTItem } from '../backend';
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { identity, isInitializing, login } = useInternetIdentity();
-  const { isAdmin, isLoading, timedOut, error, retry } = useIsCallerAdminWithTimeout(15000);
+  const { isFetching: actorFetching } = useActor();
+  const { isAdmin, isLoading, timedOut, error, retry } = useIsCallerAdminWithTimeout(20000);
 
   const [editingNFT, setEditingNFT] = useState<NFTItem | null>(null);
   const [showNFTForm, setShowNFTForm] = useState(false);
@@ -32,13 +34,18 @@ export default function AdminDashboard() {
     setShowNFTForm(false);
   };
 
-  // Still initializing identity
-  if (isInitializing) {
+  // Still initializing identity or actor
+  if (isInitializing || (isAuthenticated && actorFetching && isLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground font-sans">Initialisierung…</p>
+          <p className="text-muted-foreground font-sans">
+            {isInitializing ? 'Initialisierung…' : 'Verbindung wird hergestellt…'}
+          </p>
+          <p className="text-muted-foreground/60 font-sans text-xs">
+            Dies kann in der Produktionsumgebung einige Sekunden dauern.
+          </p>
         </div>
       </div>
     );

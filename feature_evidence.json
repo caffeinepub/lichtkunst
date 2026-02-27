@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-reduce-the-hero-banner-image-height-on-the-gallery-page-frontend-src-pages-gallery-tsx-to-exactly-half-its-current-value-adjust-any-related-css-classes-or-inline-styles-accordingly-so-the-banner-proportions-and-layout-remain-visually-clean",
-      "featureTitle": "Reduce the hero banner image height on the Gallery page (frontend/src/pages/Gallery.tsx) to exactly half its current value. Adjust any related CSS classes or inline styles accordingly so the banner proportions and layout remain visually clean.",
+      "featureId": "feature-fix-the-admin-dashboard-page-so-it-no-longer-hangs-indefinitely-after-a-successful-internet-identity-login-the-page-currently-shows-an-infinite-loading-state-instead-of-rendering-the-admin-tabs-investigate-and-resolve-the-race-condition-or-timeout-issue-in-the-admin-authentication-check-useiscalleradminwithtimeout-that-causes-the-page-to-never-transition-out-of-the-loading-state-in-production",
+      "featureTitle": "Fix the Admin Dashboard page so it no longer hangs indefinitely after a successful Internet Identity login. The page currently shows an infinite loading state instead of rendering the admin tabs. Investigate and resolve the race condition or timeout issue in the admin authentication check (useIsCallerAdminWithTimeout) that causes the page to never transition out of the loading state in production.",
       "files": [
-        "frontend/src/pages/Gallery.tsx"
+        "frontend/src/pages/AdminDashboard.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -22,10 +22,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-rotating-quotes-section-inside-the-hero-banner-on-the-gallery-page-frontend-src-pages-gallery-tsx-to-display-only-the-uz-quote-from-russell-geheimnis-des-lichtes-remove-the-goethe-quote-and-any-rotation-carousel-logic-so-that-a-single-static-quote-is-shown",
-      "featureTitle": "Update the rotating quotes section inside the hero banner on the Gallery page (frontend/src/pages/Gallery.tsx) to display only the UZ quote (from Russell, 'Geheimnis des Lichtes'). Remove the Goethe quote and any rotation/carousel logic so that a single static quote is shown.",
+      "featureId": "feature-ensure-the-backend-actor-used-in-the-admin-dashboard-is-created-with-the-authenticated-identity-not-anonymous-when-the-user-is-logged-in-via-internet-identity-if-the-actor-is-being-instantiated-before-the-identity-is-fully-available-add-proper-sequencing-so-the-admin-check-only-fires-once-an-authenticated-actor-is-ready",
+      "featureTitle": "Ensure the backend actor used in the Admin Dashboard is created with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. If the actor is being instantiated before the identity is fully available, add proper sequencing so the admin check only fires once an authenticated actor is ready.",
       "files": [
-        "frontend/src/pages/Gallery.tsx"
+        "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
       ],
       "components": [
         "authorization@4.0.0",

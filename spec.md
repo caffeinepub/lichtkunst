@@ -1,11 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Reduce the hero banner height on the Gallery page to half its current size and replace the rotating quotes with a single static UZ quote.
+**Goal:** Fix the Admin Dashboard infinite loading state that occurs after a successful Internet Identity login in production.
 
 **Planned changes:**
-- Reduce the hero banner image height on the Gallery page to exactly half its current value, ensuring the image still fills the area correctly
-- Remove the Goethe quote and all rotation/carousel logic from the hero banner
-- Display only the single static Russell "Geheimnis des Lichtes" (UZ) quote in the banner
+- Investigate and fix the `useIsCallerAdminWithTimeout` hook (or its usage) to resolve the race condition/timeout issue causing the page to never exit the loading state
+- Ensure the backend actor used for the admin check is instantiated with the authenticated identity, not anonymously
+- Add proper sequencing so the `isCallerAdmin` backend call only fires once the authenticated actor is fully ready
+- Replace infinite spinner behavior with a clear error message or retry option if the admin check fails or times out
 
-**User-visible outcome:** The Gallery page hero banner is shorter and shows one static quote instead of rotating between two.
+**User-visible outcome:** After logging in with Internet Identity, the Admin Dashboard loads correctly and displays the admin tabs (collections, NFT items) instead of spinning indefinitely.

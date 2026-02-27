@@ -1,46 +1,32 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Project involves a web application with an admin area and a banner displaying quotes (Russell 'Geheimnis des Lichtes' and Goethe). User requested banner image height reduction by half and a single quote (UZ).",
-  "architectural_notes": [
-    "Banner section displays quotes (Russell 'Geheimnis des Lichtes' and Goethe); admin area is part of the app"
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [
+    "Admin area hangs indefinitely (infinite loading) in production despite successful Internet Identity login"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-reduce-the-hero-banner-image-height-on-the-gallery-page-frontend-src-pages-gallery-tsx-to-exactly-half-its-current-value-adjust-any-related-css-classes-or-inline-styles-accordingly-so-the-banner-proportions-and-layout-remain-visually-clean",
-      "title": "Reduce the hero banner image height on the Gallery page (frontend/src/pages/Gallery.tsx) to exactly half its current value. Adjust any related CSS classes or inline styles accordingly so the banner proportions and layout remain visually clean.",
+      "id": "feature-fix-the-admin-dashboard-page-so-it-no-longer-hangs-indefinitely-after-a-successful-internet-identity-login-the-page-currently-shows-an-infinite-loading-state-instead-of-rendering-the-admin-tabs-investigate-and-resolve-the-race-condition-or-timeout-issue-in-the-admin-authentication-check-useiscalleradminwithtimeout-that-causes-the-page-to-never-transition-out-of-the-loading-state-in-production",
+      "title": "Fix the Admin Dashboard page so it no longer hangs indefinitely after a successful Internet Identity login. The page currently shows an infinite loading state instead of rendering the admin tabs. Investigate and resolve the race condition or timeout issue in the admin authentication check (useIsCallerAdminWithTimeout) that causes the page to never transition out of the loading state in production.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-rotating-quotes-section-inside-the-hero-banner-on-the-gallery-page-frontend-src-pages-gallery-tsx-to-display-only-the-uz-quote-from-russell-geheimnis-des-lichtes-remove-the-goethe-quote-and-any-rotation-carousel-logic-so-that-a-single-static-quote-is-shown",
-      "title": "Update the rotating quotes section inside the hero banner on the Gallery page (frontend/src/pages/Gallery.tsx) to display only the UZ quote (from Russell, 'Geheimnis des Lichtes'). Remove the Goethe quote and any rotation/carousel logic so that a single static quote is shown.",
+      "id": "feature-ensure-the-backend-actor-used-in-the-admin-dashboard-is-created-with-the-authenticated-identity-not-anonymous-when-the-user-is-logged-in-via-internet-identity-if-the-actor-is-being-instantiated-before-the-identity-is-fully-available-add-proper-sequencing-so-the-admin-check-only-fires-once-an-authenticated-actor-is-ready",
+      "title": "Ensure the backend actor used in the Admin Dashboard is created with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. If the actor is being instantiated before the identity is fully available, add proper sequencing so the admin check only fires once an authenticated actor is ready.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Reduce banner image height by half",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Display only one quote (UZ) in the banner",
-      "reqIds": [],
-      "status": "pending"
-    }
-  ],
-  "gameProjectType": "none",
-  "projectName": "Istvan Seidel Light Art",
+  "new_feature_requests": [],
+  "projectName": "Fix Admin Dashboard infinite loading after Internet Identity login",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
