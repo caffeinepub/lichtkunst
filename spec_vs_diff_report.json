@@ -1,23 +1,40 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-26T23:09:20.157Z",
-  "summary": "The diff updates NFTCollectionsSection.tsx with all seven collections and their exact Getgems URLs. All URLs match the requirements. However, the image filenames used in the code do not match the specified filenames from the build request, and no image files were added to the repository.",
+  "generatedAt": "2026-02-27T18:00:42.399Z",
+  "summary": "The diff implements most of the required NFT minting, principal display, My NFTs filtering, and NFT card detail features. Key components like PrincipalDisplay, IssuedNFTCard, NFTDetailModal, and NFTGallery page are present with the required functionality. The backend appears to have NFT minting with owner principal storage. However, some acceptance criteria cannot be fully confirmed due to truncated diffs, and one notable gap exists: the MintNFTModal component (referenced in NFTGallery.tsx imports) is not included in the diff, making it impossible to verify several REQ-1 acceptance criteria about the minting form/modal itself.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Preview images must be loaded from frontend/public/assets/generated using the specified filenames (nft-preview-lichtei.dim_600x400.png, nft-preview-wheeloftime.dim_600x400.png, nft-preview-colourshades.dim_600x400.png, nft-preview-schieferlichtgrafik.dim_600x400.png, nft-preview-lightseekers.dim_600x400.png, nft-preview-panelpaintings.dim_600x400.png, nft-preview-firedance.dim_600x400.png)",
-      "reason": "The code uses different filenames (e.g., lichtei-preview.dim_800x600.png, wheeloftime-preview.dim_800x600.png, light-seekers-preview.dim_800x600.png) instead of the exact names specified in the build request. Additionally, no image files were added in the diff (ADDED FILES: none), so the actual image assets are missing from frontend/public/assets/generated.",
+      "requirement": "When logged in, a minting form/modal opens allowing the user to select an image, enter a title and description; Clicking confirm triggers the backend mint call; A success message is shown after successful minting",
+      "reason": "The MintNFTModal component is imported in NFTGallery.tsx but its implementation is not present in the diff. Cannot verify it allows image selection, title/description entry, backend mint call, or success message.",
       "evidence": [
-        "frontend/src/components/NFTCollectionsSection.tsx"
+        "frontend/src/pages/NFTGallery.tsx"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.85,
+  "hallucinated_features": [
+    {
+      "description": "German-language UI labels throughout the application (e.g., 'Kopiert!', 'Canister-Adresse', 'Meine Wallet', 'Kein Bild', 'de-DE' date formatting)",
+      "reason": "The build request does not specify any language or locale requirement. All UI text being in German was not requested.",
+      "evidence": [
+        "frontend/src/components/PrincipalDisplay.tsx",
+        "frontend/src/components/IssuedNFTCard.tsx",
+        "frontend/src/pages/NFTGallery.tsx",
+        "frontend/src/components/NFTDetailModal.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.72,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/NFTCollectionsSection.tsx",
+    "frontend/src/components/IssuedNFTCard.tsx",
+    "frontend/src/components/NFTDetailModal.tsx",
+    "frontend/src/components/PrincipalDisplay.tsx",
+    "frontend/src/hooks/useGetMyIssuedNFTs.ts",
+    "frontend/src/pages/NFTGallery.tsx",
+    "frontend/src/utils/formatPrincipal.ts",
     "project_state.json"
   ]
 }

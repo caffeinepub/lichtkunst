@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-nftcollectionssection-tsx-to-include-all-seven-nft-collections-with-their-exact-getgems-urls-lichtei-https-getgems-io-lichtei-wheel-of-time-https-getgems-io-wheeloftime-colour-shades-https-getgems-io-colourshades-schieferlichtgrafik-https-getgems-io-collection-eqcgrhxomaryukslltlh5dsxyt-h2df6vlieuiwsj05kfjjm-light-seekers-https-getgems-io-collection-eqa1w-yi6igmi-94koigwgd79i-bhz0uot-z1y5w8fbguiaz-panel-paintings-https-getgems-io-collection-eqa-bfpwkniqoaatwojdfidk9x7-mcw-stpzt-1kdsf6udyv-and-flammenbilder-fire-dance-https-getgems-io-collection-eqa8b4visumrk2tiumri-wmlm3qhahogegnqsyzro6s9o2vf-each-card-must-link-directly-to-its-getgems-collection-url-opening-in-a-new-tab-and-display-a-dedicated-preview-image-from-frontend-public-assets-generated",
-      "featureTitle": "Update NFTCollectionsSection.tsx to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each card must link directly to its Getgems collection URL (opening in a new tab) and display a dedicated preview image from frontend/public/assets/generated.",
+      "featureId": "feature-add-a-clearly-visible-mint-nft-button-in-the-nft-gallery-page-that-opens-a-minting-modal-form-the-user-must-be-logged-in-with-internet-identity-to-mint-the-mint-action-must-call-the-backend-s-mint-function-and-associate-the-minted-nft-with-the-caller-s-principal-identity",
+      "featureTitle": "Add a clearly visible 'Mint NFT' button in the NFT Gallery page that opens a minting modal/form. The user must be logged in with Internet Identity to mint. The mint action must call the backend's mint function and associate the minted NFT with the caller's principal (Identity).",
       "files": [
-        "frontend/src/components/NFTCollectionsSection.tsx"
+        "frontend/src/pages/NFTGallery.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,6 +18,70 @@
       ],
       "testIds": [
         "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-display-the-authenticated-user-s-icp-principal-address-from-internet-identity-prominently-in-the-nft-gallery-page-it-should-be-shown-as-a-copyable-field-also-display-the-canister-s-principal-address-so-users-know-the-on-chain-location-of-the-nft-contract",
+      "featureTitle": "Display the authenticated user's ICP principal address (from Internet Identity) prominently in the NFT Gallery page. It should be shown as a copyable field. Also display the canister's principal address so users know the on-chain location of the NFT contract.",
+      "files": [
+        "frontend/src/components/PrincipalDisplay.tsx",
+        "frontend/src/pages/NFTGallery.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-that-minted-nfts-are-stored-in-the-backend-linked-to-the-minting-user-s-principal-id-add-a-my-nfts-section-or-filter-in-the-nft-gallery-page-that-shows-only-the-nfts-minted-by-and-thus-owned-by-the-currently-logged-in-internet-identity-principal",
+      "featureTitle": "Ensure that minted NFTs are stored in the backend linked to the minting user's principal ID. Add a 'My NFTs' section or filter in the NFT Gallery page that shows only the NFTs minted by (and thus owned by) the currently logged-in Internet Identity principal.",
+      "files": [
+        "frontend/src/hooks/useGetMyIssuedNFTs.ts",
+        "frontend/src/pages/NFTGallery.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-each-nft-card-in-the-gallery-both-in-the-all-nfts-view-and-my-nfts-view-must-display-the-owner-s-principal-address-shortened-and-the-token-id-the-nft-detail-modal-must-display-the-full-owner-principal-token-id-mint-date-and-a-link-to-the-icp-dashboard-explorer-for-on-chain-verification",
+      "featureTitle": "Each NFT card in the gallery (both in the 'All NFTs' view and 'My NFTs' view) must display the owner's principal address (shortened) and the token ID. The NFT detail modal must display the full owner principal, token ID, mint date, and a link to the ICP dashboard/explorer for on-chain verification.",
+      "files": [
+        "frontend/src/components/IssuedNFTCard.tsx",
+        "frontend/src/components/NFTDetailModal.tsx",
+        "frontend/src/utils/formatPrincipal.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
       ],
       "confidence": "high"
     }

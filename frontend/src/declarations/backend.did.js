@@ -44,6 +44,23 @@ export const NFTItem = IDL.Record({
   'price' : IDL.Nat,
 });
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const TokenId = IDL.Nat;
+export const NFTMetadata = IDL.Record({
+  'title' : IDL.Text,
+  'description' : IDL.Text,
+  'image' : ExternalBlob,
+});
+export const NFT = IDL.Record({
+  'tokenId' : TokenId,
+  'owner' : IDL.Principal,
+  'metadata' : NFTMetadata,
+  'mintedAt' : IDL.Int,
+});
+export const MintRequest = IDL.Record({
+  'title' : IDL.Text,
+  'description' : IDL.Text,
+  'image' : ExternalBlob,
+});
 
 export const idlService = IDL.Service({
   '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -80,12 +97,14 @@ export const idlService = IDL.Service({
       [],
     ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'countMyNFTs' : IDL.Func([], [IDL.Nat], ['query']),
   'deleteCollection' : IDL.Func([IDL.Text], [], []),
   'deleteNFT' : IDL.Func([IDL.Text], [], []),
   'getAllCollections' : IDL.Func([], [IDL.Vec(NFTCollection)], ['query']),
   'getAllNFTs' : IDL.Func([], [IDL.Vec(NFTItem)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getIssuedNFT' : IDL.Func([TokenId], [IDL.Opt(NFT)], ['query']),
   'getNFT' : IDL.Func([IDL.Text], [IDL.Opt(NFTItem)], ['query']),
   'getNFTsByCollection' : IDL.Func([IDL.Text], [IDL.Vec(NFTItem)], ['query']),
   'getUserProfile' : IDL.Func(
@@ -94,6 +113,10 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'listAllNFTs' : IDL.Func([], [IDL.Vec(NFT)], ['query']),
+  'listMyNFTs' : IDL.Func([], [IDL.Vec(NFT)], ['query']),
+  'listNFTsByPrincipal' : IDL.Func([IDL.Principal], [IDL.Vec(NFT)], ['query']),
+  'mintNFT' : IDL.Func([MintRequest], [TokenId], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateCollection' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'updateNFT' : IDL.Func(
@@ -143,6 +166,23 @@ export const idlFactory = ({ IDL }) => {
     'price' : IDL.Nat,
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const TokenId = IDL.Nat;
+  const NFTMetadata = IDL.Record({
+    'title' : IDL.Text,
+    'description' : IDL.Text,
+    'image' : ExternalBlob,
+  });
+  const NFT = IDL.Record({
+    'tokenId' : TokenId,
+    'owner' : IDL.Principal,
+    'metadata' : NFTMetadata,
+    'mintedAt' : IDL.Int,
+  });
+  const MintRequest = IDL.Record({
+    'title' : IDL.Text,
+    'description' : IDL.Text,
+    'image' : ExternalBlob,
+  });
   
   return IDL.Service({
     '_caffeineStorageBlobIsLive' : IDL.Func(
@@ -179,12 +219,14 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'countMyNFTs' : IDL.Func([], [IDL.Nat], ['query']),
     'deleteCollection' : IDL.Func([IDL.Text], [], []),
     'deleteNFT' : IDL.Func([IDL.Text], [], []),
     'getAllCollections' : IDL.Func([], [IDL.Vec(NFTCollection)], ['query']),
     'getAllNFTs' : IDL.Func([], [IDL.Vec(NFTItem)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getIssuedNFT' : IDL.Func([TokenId], [IDL.Opt(NFT)], ['query']),
     'getNFT' : IDL.Func([IDL.Text], [IDL.Opt(NFTItem)], ['query']),
     'getNFTsByCollection' : IDL.Func([IDL.Text], [IDL.Vec(NFTItem)], ['query']),
     'getUserProfile' : IDL.Func(
@@ -193,6 +235,14 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'listAllNFTs' : IDL.Func([], [IDL.Vec(NFT)], ['query']),
+    'listMyNFTs' : IDL.Func([], [IDL.Vec(NFT)], ['query']),
+    'listNFTsByPrincipal' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Vec(NFT)],
+        ['query'],
+      ),
+    'mintNFT' : IDL.Func([MintRequest], [TokenId], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateCollection' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'updateNFT' : IDL.Func(

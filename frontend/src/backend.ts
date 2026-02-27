@@ -89,12 +89,18 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface MintRequest {
+    title: string;
+    description: string;
+    image: ExternalBlob;
+}
 export interface NFTCollection {
     id: string;
     name: string;
     createdAt: bigint;
     description: string;
 }
+export type TokenId = bigint;
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
@@ -110,9 +116,20 @@ export interface NFTItem {
     mintedAt?: bigint;
     price: bigint;
 }
+export interface NFTMetadata {
+    title: string;
+    description: string;
+    image: ExternalBlob;
+}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
+}
+export interface NFT {
+    tokenId: TokenId;
+    owner: Principal;
+    metadata: NFTMetadata;
+    mintedAt: bigint;
 }
 export interface UserProfile {
     name: string;
@@ -137,22 +154,28 @@ export interface backendInterface {
     addCollection(id: string, name: string, description: string): Promise<void>;
     addNFT(id: string, collectionId: string, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    countMyNFTs(): Promise<bigint>;
     deleteCollection(id: string): Promise<void>;
     deleteNFT(id: string): Promise<void>;
     getAllCollections(): Promise<Array<NFTCollection>>;
     getAllNFTs(): Promise<Array<NFTItem>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getIssuedNFT(tokenId: TokenId): Promise<NFT | null>;
     getNFT(id: string): Promise<NFTItem | null>;
     getNFTsByCollection(collectionId: string): Promise<Array<NFTItem>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    listAllNFTs(): Promise<Array<NFT>>;
+    listMyNFTs(): Promise<Array<NFT>>;
+    listNFTsByPrincipal(principal: Principal): Promise<Array<NFT>>;
+    mintNFT(request: MintRequest): Promise<TokenId>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateCollection(id: string, name: string, description: string): Promise<void>;
     updateNFT(id: string, collectionId: string, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
     uploadImage(blob: ExternalBlob): Promise<ExternalBlob>;
 }
-import type { ExternalBlob as _ExternalBlob, NFTItem as _NFTItem, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { ExternalBlob as _ExternalBlob, MintRequest as _MintRequest, NFT as _NFT, NFTItem as _NFTItem, NFTMetadata as _NFTMetadata, TokenId as _TokenId, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -295,6 +318,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async countMyNFTs(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.countMyNFTs();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.countMyNFTs();
+            return result;
+        }
+    }
     async deleteCollection(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -379,18 +416,32 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n18(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getNFT(arg0: string): Promise<NFTItem | null> {
+    async getIssuedNFT(arg0: TokenId): Promise<NFT | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getNFT(arg0);
+                const result = await this.actor.getIssuedNFT(arg0);
                 return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getNFT(arg0);
+            const result = await this.actor.getIssuedNFT(arg0);
             return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getNFT(arg0: string): Promise<NFTItem | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getNFT(arg0);
+                return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getNFT(arg0);
+            return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
         }
     }
     async getNFTsByCollection(arg0: string): Promise<Array<NFTItem>> {
@@ -432,6 +483,62 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isCallerAdmin();
+            return result;
+        }
+    }
+    async listAllNFTs(): Promise<Array<NFT>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listAllNFTs();
+                return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listAllNFTs();
+            return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listMyNFTs(): Promise<Array<NFT>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listMyNFTs();
+                return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listMyNFTs();
+            return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listNFTsByPrincipal(arg0: Principal): Promise<Array<NFT>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listNFTsByPrincipal(arg0);
+                return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listNFTsByPrincipal(arg0);
+            return from_candid_vec_n26(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async mintNFT(arg0: MintRequest): Promise<TokenId> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.mintNFT(await to_candid_MintRequest_n27(this._uploadFile, this._downloadFile, arg0));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.mintNFT(await to_candid_MintRequest_n27(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -498,6 +605,12 @@ async function from_candid_ExternalBlob_n14(_uploadFile: (file: ExternalBlob) =>
 async function from_candid_NFTItem_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NFTItem): Promise<NFTItem> {
     return await from_candid_record_n13(_uploadFile, _downloadFile, value);
 }
+async function from_candid_NFTMetadata_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NFTMetadata): Promise<NFTMetadata> {
+    return await from_candid_record_n24(_uploadFile, _downloadFile, value);
+}
+async function from_candid_NFT_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NFT): Promise<NFT> {
+    return await from_candid_record_n22(_uploadFile, _downloadFile, value);
+}
 function from_candid_UserRole_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n19(_uploadFile, _downloadFile, value);
 }
@@ -513,7 +626,10 @@ function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_opt_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
-async function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_NFTItem]): Promise<NFTItem | null> {
+async function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_NFT]): Promise<NFT | null> {
+    return value.length === 0 ? null : await from_candid_NFT_n21(_uploadFile, _downloadFile, value[0]);
+}
+async function from_candid_opt_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_NFTItem]): Promise<NFTItem | null> {
     return value.length === 0 ? null : await from_candid_NFTItem_n12(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
@@ -558,6 +674,39 @@ async function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promi
         price: value.price
     };
 }
+async function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    tokenId: _TokenId;
+    owner: Principal;
+    metadata: _NFTMetadata;
+    mintedAt: bigint;
+}): Promise<{
+    tokenId: TokenId;
+    owner: Principal;
+    metadata: NFTMetadata;
+    mintedAt: bigint;
+}> {
+    return {
+        tokenId: value.tokenId,
+        owner: value.owner,
+        metadata: await from_candid_NFTMetadata_n23(_uploadFile, _downloadFile, value.metadata),
+        mintedAt: value.mintedAt
+    };
+}
+async function from_candid_record_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    title: string;
+    description: string;
+    image: _ExternalBlob;
+}): Promise<{
+    title: string;
+    description: string;
+    image: ExternalBlob;
+}> {
+    return {
+        title: value.title,
+        description: value.description,
+        image: await from_candid_ExternalBlob_n14(_uploadFile, _downloadFile, value.image)
+    };
+}
 function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     success: [] | [boolean];
     topped_up_amount: [] | [bigint];
@@ -582,8 +731,14 @@ function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Ui
 async function from_candid_vec_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_NFTItem>): Promise<Array<NFTItem>> {
     return await Promise.all(value.map(async (x)=>await from_candid_NFTItem_n12(_uploadFile, _downloadFile, x)));
 }
+async function from_candid_vec_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_NFT>): Promise<Array<NFT>> {
+    return await Promise.all(value.map(async (x)=>await from_candid_NFT_n21(_uploadFile, _downloadFile, x)));
+}
 async function to_candid_ExternalBlob_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
     return await _uploadFile(value);
+}
+async function to_candid_MintRequest_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: MintRequest): Promise<_MintRequest> {
+    return await to_candid_record_n28(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n10(_uploadFile, _downloadFile, value);
@@ -593,6 +748,21 @@ function to_candid__CaffeineStorageRefillInformation_n2(_uploadFile: (file: Exte
 }
 function to_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CaffeineStorageRefillInformation | null): [] | [__CaffeineStorageRefillInformation] {
     return value === null ? candid_none() : candid_some(to_candid__CaffeineStorageRefillInformation_n2(_uploadFile, _downloadFile, value));
+}
+async function to_candid_record_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    title: string;
+    description: string;
+    image: ExternalBlob;
+}): Promise<{
+    title: string;
+    description: string;
+    image: _ExternalBlob;
+}> {
+    return {
+        title: value.title,
+        description: value.description,
+        image: await to_candid_ExternalBlob_n8(_uploadFile, _downloadFile, value.image)
+    };
 }
 function to_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     proposed_top_up_amount?: bigint;

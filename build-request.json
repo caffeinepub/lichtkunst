@@ -1,50 +1,107 @@
 {
   "kind": "build_request",
-  "title": "Add NFT collections to Werkverzeichnis with preview images and Getgems links",
-  "projectName": "Istvan Seidel Lichtkunst",
-  "priority": "normal",
+  "title": "NFT Minting in Gallery with Wallet Identity Assignment and Address Display",
+  "projectName": "Istvan Seidel NFT Gallery",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update NFTCollectionsSection.tsx to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each card must link directly to its Getgems collection URL (opening in a new tab) and display a dedicated preview image from frontend/public/assets/generated.",
+      "text": "Add a clearly visible 'Mint NFT' button in the NFT Gallery page that opens a minting modal/form. The user must be logged in with Internet Identity to mint. The mint action must call the backend's mint function and associate the minted NFT with the caller's principal (Identity).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-latest"
         ],
         "quotes": [
-          "https://getgems.io/lichtei, https://getgems.io/wheeloftime und https://getgems.io/colourshades",
-          "Schieferlichtgrafik: https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM, light seekers: https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz, panel paintings: https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV und Flammenbilder fire dance: https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf"
+          "mache mir die Galerie so, daß ich NFTs minten kann"
         ]
       },
       "acceptanceCriteria": [
-        "All seven collection cards are visible in the NFT collections section",
-        "Each card shows the correct collection name and a unique preview image",
-        "Clicking a card opens the exact Getgems URL for that collection in a new browser tab",
-        "No collection is missing or has a wrong URL",
-        "Preview images are loaded from frontend/public/assets/generated"
+        "A 'Mint NFT' button is visible in the NFT Gallery page",
+        "Clicking the button when not logged in prompts the user to log in with Internet Identity",
+        "When logged in, a minting form/modal opens allowing the user to select an image, enter a title and description",
+        "Clicking confirm triggers the backend mint call with the authenticated caller's principal",
+        "A success message is shown after successful minting",
+        "The newly minted NFT appears in the gallery and in the user's minted NFTs list without a page reload"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Display the authenticated user's ICP principal address (from Internet Identity) prominently in the NFT Gallery page. It should be shown as a copyable field. Also display the canister's principal address so users know the on-chain location of the NFT contract.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "die Adresse ersichtliche ist"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the user is logged in, their principal ID is displayed in the NFT Gallery page",
+        "The principal ID can be copied to clipboard with a single click",
+        "The canister principal address is also displayed and copyable",
+        "If the user is not logged in, a placeholder or login prompt is shown instead of the address"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Ensure that minted NFTs are stored in the backend linked to the minting user's principal ID. Add a 'My NFTs' section or filter in the NFT Gallery page that shows only the NFTs minted by (and thus owned by) the currently logged-in Internet Identity principal.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "die NFTs sich in meiner Wallet meiner Identity zugeordnet befinden"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The backend stores each minted NFT with its owner principal",
+        "A query exists in the backend to fetch all NFTs owned by a given principal",
+        "The NFT Gallery page has a 'My NFTs' tab or filter section visible when the user is logged in",
+        "This section shows only NFTs whose owner principal matches the currently authenticated user's principal",
+        "The owner principal is displayed on each NFT card/detail in this section",
+        "If no NFTs are owned by the user, an appropriate empty state message is shown"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Each NFT card in the gallery (both in the 'All NFTs' view and 'My NFTs' view) must display the owner's principal address (shortened) and the token ID. The NFT detail modal must display the full owner principal, token ID, mint date, and a link to the ICP dashboard/explorer for on-chain verification.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "die Adresse ersichtliche ist",
+          "die NFTs sich in meiner Wallet meiner Identity zugeordnet befinden"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Each NFT card shows a shortened owner principal (e.g., first 8 and last 4 characters)",
+        "Each NFT card shows the token ID",
+        "The NFT detail modal/view shows the full owner principal with a copy button",
+        "The NFT detail modal shows mint date and token ID",
+        "A link to the ICP dashboard explorer is provided for on-chain verification"
       ]
     }
   ],
   "constraints": [
-    "Do not change the Getgems URLs — use them exactly as provided by the user",
-    "Do not route generated preview images through the backend"
+    "All Motoko backend logic must remain in backend/main.mo as a single actor",
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "NFT ownership must be tied to the Internet Identity principal — no other authentication mechanism",
+    "Do not use external databases or services; all state must be stored in the ICP canister"
   ],
   "nonGoals": [
-    "Adding new backend data models or admin CRUD for these static collections",
-    "Fetching live NFT data from the Getgems API",
-    "Changing the overall layout or design of the NFTCollectionsSection beyond updating collection data and images"
+    "No TON blockchain integration",
+    "No external NFT marketplace integration (Getgems, OpenSea, etc.)",
+    "No ICP token payment for minting (credits handled by Caffeine platform)",
+    "No email or push notifications",
+    "No real-time updates via WebSockets"
   ],
   "imageRequirements": {
-    "required": [
-      "Abstract glowing egg sculpture with radiant light beams and golden tones on a dark background, representing light art (nft-preview-lichtei.dim_600x400.png)",
-      "Mystical spinning wheel constructed from luminous colored light trails against a deep cosmic background (nft-preview-wheeloftime.dim_600x400.png)",
-      "Spectrum of vivid color gradients dissolving into each other like stained glass illuminated from within (nft-preview-colourshades.dim_600x400.png)",
-      "Textured slate surface with engraved light patterns and glowing geometric lines etched into stone (nft-preview-schieferlichtgrafik.dim_600x400.png)",
-      "Abstract human silhouettes reaching upward toward beams of ascending radiant light in a dark void (nft-preview-lightseekers.dim_600x400.png)",
-      "Luminous rectangular panels arranged in a grid, each glowing with a different intense color of light (nft-preview-panelpaintings.dim_600x400.png)",
-      "Dynamic swirling flames rendered in vivid orange, red, and gold light trails dancing against a black background (nft-preview-firedance.dim_600x400.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

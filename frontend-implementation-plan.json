@@ -1,23 +1,103 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add NFT collections to Werkverzeichnis with preview images and Getgems links",
+  "title": "NFT Minting in Gallery with Wallet Identity Assignment and Address Display",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Update NFTCollectionsSection.tsx to display all seven NFT collections with exact Getgems URLs and dedicated preview images from generated assets",
+      "summary": "Add 'Mint NFT' button in NFT Gallery that opens minting modal requiring Internet Identity authentication",
       "acceptanceCriteria": [
-        "All seven collection cards are visible in the NFT collections section",
-        "Each card shows the correct collection name and a unique preview image",
-        "Clicking a card opens the exact Getgems URL for that collection in a new browser tab",
-        "No collection is missing or has a wrong URL",
-        "Preview images are loaded from frontend/public/assets/generated"
+        "A 'Mint NFT' button is visible in the NFT Gallery page",
+        "Clicking the button when not logged in prompts the user to log in with Internet Identity",
+        "When logged in, a minting form/modal opens allowing the user to select an image, enter a title and description",
+        "Clicking confirm triggers the backend mint call with the authenticated caller's principal",
+        "A success message is shown after successful minting",
+        "The newly minted NFT appears in the gallery and in the user's minted NFTs list without a page reload"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/NFTCollectionsSection.tsx",
+          "path": "frontend/src/pages/NFTGallery.tsx",
           "operation": "modify",
-          "description": "Update the collections array to include all seven NFT collections with their exact Getgems URLs: Lichtei (https://getgems.io/lichtei), Wheel of Time (https://getgems.io/wheeloftime), Colour Shades (https://getgems.io/colourshades), Schieferlichtgrafik (https://getgems.io/collection/EQCgrHXOmAryUksLLtlh5dsXyT_h2DF6vLiEUiwsj05KFjJM), Light Seekers (https://getgems.io/collection/EQA1W-YI6IGmi_94KoIgwgD79i_bhz0Uot-Z1y5W8fBGuIAz), Panel Paintings (https://getgems.io/collection/EQA_bfpwKniQOAATWojdfIDk9X7_mCW_Stpzt_1kDSF6UDYV), and Flammenbilder Fire Dance (https://getgems.io/collection/EQA8b4VisUmrk2tiumRI-wmlM3QhahoGeGNqSYzrO6s9O2Vf). Each collection must reference its corresponding preview image from frontend/public/assets/generated using the exact workspace paths: frontend/public/assets/generated/lichtei-preview.dim_800x600.png, frontend/public/assets/generated/wheeloftime-preview.dim_800x600.png, frontend/public/assets/generated/colourshades-preview.dim_800x600.png, frontend/public/assets/generated/schieferlichtgrafik-preview.dim_800x600.png, frontend/public/assets/generated/light-seekers-preview.dim_800x600.png, frontend/public/assets/generated/panel-paintings-preview.dim_800x600.png, and frontend/public/assets/generated/fire-dance-preview.dim_800x600.png. Each collection card must link directly to its Getgems URL with target='_blank' to open in a new tab. Do not change the NFTCollectionCard component's interface or behavior beyond providing the correct image paths and URLs."
+          "description": "Add a prominent 'Mint NFT' button near the top of the NFT Gallery page. When clicked, check if the user is authenticated using useInternetIdentity. If not authenticated, show a toast prompting the user to log in. If authenticated, open the existing MintNFTModal component (already in the codebase). The modal already handles image selection, title, description input, backend mint call with the caller's principal, success messages, and query invalidation to refresh the gallery without page reload. Wire the button to set the modal open state."
+        },
+        {
+          "path": "frontend/src/components/MintNFTModal.tsx",
+          "operation": "modify",
+          "description": "Ensure the modal uses the useMintNFT hook to call the backend's mintNFT function with the authenticated caller's principal (already provided by the backend actor context). Verify that on successful mint, the modal invalidates the 'issued-nfts' and 'nft-items' query keys to refresh the gallery automatically. Add German-language toast notifications for success and error states. Ensure the modal displays upload progress and validates that the user has selected an image before allowing submission."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Display authenticated user's principal and canister principal as copyable fields in NFT Gallery",
+      "acceptanceCriteria": [
+        "When the user is logged in, their principal ID is displayed in the NFT Gallery page",
+        "The principal ID can be copied to clipboard with a single click",
+        "The canister principal address is also displayed and copyable",
+        "If the user is not logged in, a placeholder or login prompt is shown instead of the address"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/NFTGallery.tsx",
+          "operation": "modify",
+          "description": "Add a section near the top of the NFT Gallery page that displays the user's principal address and the canister principal address. Use useInternetIdentity to get the user's identity. If authenticated, show the user's principal via identity.getPrincipal().toString() with a copy button using the copyToClipboard utility from frontend/src/utils/copyToClipboard.ts. Also display the canister principal (available from the actor or environment config) with a copy button. Both addresses should be formatted as short strings (first 8 and last 4 characters) with a tooltip showing the full address. If not authenticated, show a message like 'Bitte melden Sie sich an, um Ihre Principal-Adresse zu sehen.' Style the section with card UI components from shadcn/ui (Card, CardHeader, CardTitle, CardContent). Add toast notifications in German when addresses are copied successfully."
+        },
+        {
+          "path": "frontend/src/components/PrincipalDisplay.tsx",
+          "operation": "create",
+          "description": "Create a reusable component that displays a principal address with copy-to-clipboard functionality. Accept props for the principal string, a label, and optional shortened display format. Use the copyToClipboard utility and show a toast notification on successful copy. Use shadcn/ui Button component for the copy action with a clipboard icon. This component will be used in NFTGallery and NFT detail views."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add 'My NFTs' section in NFT Gallery showing only NFTs owned by the authenticated user",
+      "acceptanceCriteria": [
+        "The backend stores each minted NFT with its owner principal",
+        "A query exists in the backend to fetch all NFTs owned by a given principal",
+        "The NFT Gallery page has a 'My NFTs' tab or filter section visible when the user is logged in",
+        "This section shows only NFTs whose owner principal matches the currently authenticated user's principal",
+        "The owner principal is displayed on each NFT card/detail in this section",
+        "If no NFTs are owned by the user, an appropriate empty state message is shown"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/NFTGallery.tsx",
+          "operation": "modify",
+          "description": "Add a tabbed interface or toggle to the NFT Gallery page with two views: 'All NFTs' and 'My NFTs'. The 'My NFTs' tab should only be visible when the user is authenticated. Use the existing useGetAllIssuedNFTs hook which calls listAllNFTs() to fetch all issued NFTs, then filter client-side to show only NFTs where nft.owner.toString() matches identity.getPrincipal().toString(). Display the filtered NFTs using the IssuedNFTCard component (already exists). If the user has no NFTs, show an empty state message in German like 'Sie haben noch keine NFTs geminted. Klicken Sie auf \"Mint NFT\", um zu beginnen.' Include the owner principal (shortened) on each NFT card in this section. Use shadcn/ui Tabs component for the tabbed interface."
+        },
+        {
+          "path": "frontend/src/hooks/useGetMyIssuedNFTs.ts",
+          "operation": "create",
+          "description": "Create a custom query hook that fetches only the NFTs owned by the currently authenticated user. Use the useActor hook to get the backend actor and useInternetIdentity to get the user's principal. Call actor.listMyNFTs() (which returns NFTs owned by the caller) and return the result. Enable the query only when the actor is available and the user is authenticated. This hook will be used in the 'My NFTs' section of NFTGallery to efficiently fetch only the user's NFTs without client-side filtering."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Display owner principal and token ID on NFT cards and full details in NFT detail modal",
+      "acceptanceCriteria": [
+        "Each NFT card shows a shortened owner principal (e.g., first 8 and last 4 characters)",
+        "Each NFT card shows the token ID",
+        "The NFT detail modal/view shows the full owner principal with a copy button",
+        "The NFT detail modal shows mint date and token ID",
+        "A link to the ICP dashboard explorer is provided for on-chain verification"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/IssuedNFTCard.tsx",
+          "operation": "modify",
+          "description": "Enhance the IssuedNFTCard component to display the token ID prominently (e.g., as a badge or chip) and the shortened owner principal (first 8 and last 4 characters with '...' in between). The token ID should be labeled clearly (e.g., 'Token #123'). The owner principal should be labeled as 'Besitzer:' followed by the shortened address. Ensure both pieces of information are visible without cluttering the card design. Use the existing NFT data structure which includes tokenId and owner fields."
+        },
+        {
+          "path": "frontend/src/components/NFTDetailModal.tsx",
+          "operation": "modify",
+          "description": "Update the NFTDetailModal component to display complete on-chain metadata for issued NFTs. Show the full owner principal with a copy button using the PrincipalDisplay component. Display the token ID, mint date (formatted in German locale), and all other metadata fields. Add a prominent link labeled 'Im ICP Dashboard anzeigen' that opens the ICP dashboard explorer URL for the NFT's token ID in a new tab. The ICP dashboard URL format should be: `https://dashboard.internetcomputer.org/canister/${canisterId}` where canisterId is the backend canister principal. Ensure all metadata fields are copyable where appropriate. Use shadcn/ui Card and Badge components for styling."
+        },
+        {
+          "path": "frontend/src/utils/formatPrincipal.ts",
+          "operation": "create",
+          "description": "Create utility functions for formatting principal addresses. Export a shortenPrincipal function that takes a principal string and returns it shortened to first 8 and last 4 characters with '...' in between (e.g., 'abc12345...xyz9'). Export a formatPrincipalForDisplay function that handles both shortened and full display options. These utilities will be used across IssuedNFTCard, NFTDetailModal, PrincipalDisplay, and NFTGallery components to ensure consistent principal formatting throughout the application."
         }
       ]
     }

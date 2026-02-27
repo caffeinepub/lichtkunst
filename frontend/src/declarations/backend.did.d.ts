@@ -11,6 +11,17 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export type ExternalBlob = Uint8Array;
+export interface MintRequest {
+  'title' : string,
+  'description' : string,
+  'image' : ExternalBlob,
+}
+export interface NFT {
+  'tokenId' : TokenId,
+  'owner' : Principal,
+  'metadata' : NFTMetadata,
+  'mintedAt' : bigint,
+}
 export interface NFTCollection {
   'id' : string,
   'name' : string,
@@ -29,6 +40,12 @@ export interface NFTItem {
   'mintedAt' : [] | [bigint],
   'price' : bigint,
 }
+export interface NFTMetadata {
+  'title' : string,
+  'description' : string,
+  'image' : ExternalBlob,
+}
+export type TokenId = bigint;
 export interface UserProfile { 'name' : string }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -67,16 +84,22 @@ export interface _SERVICE {
     undefined
   >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'countMyNFTs' : ActorMethod<[], bigint>,
   'deleteCollection' : ActorMethod<[string], undefined>,
   'deleteNFT' : ActorMethod<[string], undefined>,
   'getAllCollections' : ActorMethod<[], Array<NFTCollection>>,
   'getAllNFTs' : ActorMethod<[], Array<NFTItem>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getIssuedNFT' : ActorMethod<[TokenId], [] | [NFT]>,
   'getNFT' : ActorMethod<[string], [] | [NFTItem]>,
   'getNFTsByCollection' : ActorMethod<[string], Array<NFTItem>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'listAllNFTs' : ActorMethod<[], Array<NFT>>,
+  'listMyNFTs' : ActorMethod<[], Array<NFT>>,
+  'listNFTsByPrincipal' : ActorMethod<[Principal], Array<NFT>>,
+  'mintNFT' : ActorMethod<[MintRequest], TokenId>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateCollection' : ActorMethod<[string, string, string], undefined>,
   'updateNFT' : ActorMethod<
