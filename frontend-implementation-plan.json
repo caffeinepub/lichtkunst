@@ -1,47 +1,54 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Add collection assignment to NFT upload form and reduce Mint button size",
+  "title": "Fix slow loading / stuck permissions check on Admin Dashboard",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add collection selector to NFT upload form for assigning NFTs to existing collections at creation time",
+      "summary": "Resolve indefinitely-hanging 'Berechtigungen werden geprüft' loading state on AdminDashboard by ensuring the permission check completes quickly and either grants access or shows an appropriate message",
       "acceptanceCriteria": [
-        "A collection dropdown/selector is visible in the NFT upload form",
-        "The dropdown is populated with collections fetched from the backend",
-        "The selected collection is passed along when creating/minting the NFT",
-        "If no collection is selected, the field is either optional or shows a clear placeholder"
+        "The 'Berechtigungen werden geprüft' loading screen resolves within 3 seconds after the page mounts.",
+        "If the user is an admin, the admin dashboard tabs (Collections, NFTs) are displayed after the check.",
+        "If the user is not an admin or not authenticated, an appropriate message or redirect is shown rather than an endless spinner.",
+        "No infinite loading state or unresolved promise occurs under any authentication state (logged in, logged out, actor unavailable)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Upload.tsx",
+          "path": "frontend/src/pages/AdminDashboard.tsx",
           "operation": "modify",
-          "description": "Add a collection selector dropdown to the NFT upload form that fetches available collections using the useGetAllCollections hook. The selector should allow users to pick a collection before submitting. Pass the selected collectionId to the backend when creating the NFT via useCreateNFT. Ensure the field shows a clear placeholder if no collection is selected and handle the case where collections are still loading."
-        },
-        {
-          "path": "frontend/src/components/MintNFTModal.tsx",
-          "operation": "modify",
-          "description": "Add a collection selector dropdown to the MintNFTModal component that fetches available collections using the useGetAllCollections hook. The selector should allow users to assign the NFT to a collection before minting. Update the mint flow to pass the selected collectionId. Ensure the field shows a clear placeholder if no collection is selected and handle loading states appropriately."
+          "description": "Replace the current permission check logic with a robust implementation that includes a hard timeout mechanism (5 seconds maximum). Add early return for unauthenticated users. Ensure the loading state resolves to either admin access granted, access denied message, or timeout error state. Add error boundary handling for actor initialization failures. Display appropriate German-language messages for each state (loading, access denied, timeout, error)."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Reduce the visual size of the Mint button to be proportionate with other form controls",
+      "summary": "Ensure useIsCallerAdmin hook always resolves within a reasonable timeout and handles unauthenticated state immediately",
       "acceptanceCriteria": [
-        "The Mint button is no longer visually dominant compared to other form elements",
-        "The button size is consistent with the general button style used elsewhere in the app"
+        "The hook settles (returns a non-pending result) within at most 5 seconds regardless of backend actor state.",
+        "When unauthenticated, the hook immediately returns false rather than waiting for an actor call.",
+        "A timeout mechanism (e.g. 5 s) causes the hook to resolve as false/error rather than staying in isLoading state."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Upload.tsx",
-          "operation": "modify",
-          "description": "Reduce the size of the Mint/Upload button by removing excessive padding, decreasing font size, or adjusting width to make it proportionate with other form controls (input fields, dropdowns). Ensure it matches the button styling used elsewhere in the application for consistency."
-        },
+          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+          "operation": "create",
+          "description": "Create a new wrapper hook that adds timeout and early-exit logic around the existing useIsCallerAdmin hook. Check authentication state from useInternetIdentity before attempting the actor call. If not authenticated, immediately return { isAdmin: false, isLoading: false, error: null }. If authenticated, race the existing useIsCallerAdmin query against a 5-second timeout using Promise.race. On timeout, return { isAdmin: false, isLoading: false, error: new Error('Admin check timed out') }. Export the hook for use in AdminDashboard."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Ensure useActor hook surfaces errors promptly and dependent hooks react correctly to unavailable actor state",
+      "acceptanceCriteria": [
+        "The actor hook does not remain in a loading state if the Internet Identity session is not present.",
+        "An error state is surfaced (not swallowed) when actor creation fails.",
+        "Dependent hooks (useIsCallerAdmin, useGetCallerUserProfile) react correctly to an unavailable actor and do not block page rendering."
+      ],
+      "file_operations": [
         {
-          "path": "frontend/src/components/MintNFTModal.tsx",
+          "path": "frontend/src/pages/AdminDashboard.tsx",
           "operation": "modify",
-          "description": "Reduce the size of the Mint button in the modal by adjusting its padding, font size, or width to be proportionate with other form elements. Ensure the button styling is consistent with the general button style used throughout the app."
+          "description": "Add explicit checks for actor availability and error states from the useActor hook. If actor is unavailable or in error state after a brief delay (1-2 seconds), display an error message in German explaining the connection issue. Ensure the page does not remain in loading state when actor initialization fails. Add fallback UI for actor errors that allows the user to retry or navigate away."
         }
       ]
     }

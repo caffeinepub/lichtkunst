@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useIsCallerAdmin } from '../hooks/useIsCallerAdmin';
+import { useIsCallerAdminWithTimeout } from '../hooks/useIsCallerAdminWithTimeout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -8,16 +8,29 @@ import AdminCollectionForm from '../components/AdminCollectionForm';
 import AdminCollectionList from '../components/AdminCollectionList';
 import AdminNFTForm from '../components/AdminNFTForm';
 import AdminNFTList from '../components/AdminNFTList';
-import { ShieldCheck, FolderOpen, ImageIcon, Loader2 } from 'lucide-react';
+import { ShieldCheck, FolderOpen, ImageIcon, Loader2, AlertTriangle } from 'lucide-react';
 import type { NFTItem } from '../backend';
 
 export default function AdminDashboard() {
-  const { identity } = useInternetIdentity();
-  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
+  const { identity, isInitializing } = useInternetIdentity();
+  const { isAdmin, isLoading, error, timedOut } = useIsCallerAdminWithTimeout();
 
   const [showNFTForm, setShowNFTForm] = useState(false);
   const [editingNFT, setEditingNFT] = useState<NFTItem | null>(null);
 
+  // Still initializing the identity (loading from storage)
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mx-auto" />
+          <p className="text-sm text-muted-foreground">Wird geladen…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in
   if (!identity) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -30,14 +43,61 @@ export default function AdminDashboard() {
     );
   }
 
-  if (adminLoading) {
+  // Checking permissions
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground mx-auto" />
+          <p className="text-sm text-muted-foreground">Berechtigungen werden geprüft…</p>
+        </div>
       </div>
     );
   }
 
+  // Timed out
+  if (timedOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <AlertTriangle className="w-12 h-12 text-warning mx-auto" />
+          <h2 className="text-xl font-semibold">Zeitüberschreitung</h2>
+          <p className="text-muted-foreground">
+            Die Verbindung zum Backend hat zu lange gedauert. Bitte laden Sie die Seite neu.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            Seite neu laden
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-semibold">Fehler</h2>
+          <p className="text-muted-foreground">
+            Bei der Berechtigungsprüfung ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            Erneut versuchen
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Access denied
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">

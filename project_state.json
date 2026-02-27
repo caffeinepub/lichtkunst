@@ -3,28 +3,38 @@
   "projectStateVersion": 3,
   "summary": "New project",
   "architectural_notes": [],
-  "known_issues": [],
-  "isFixRequest": false,
+  "known_issues": [
+    "Page loads very slowly and does not proceed past the 'Berechtigungen werden geprüft' (permissions check) screen; admin area not loading correctly"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-in-the-nft-upload-mint-form-upload-page-and-or-mintnftmodal-add-a-collection-selector-field-that-allows-the-user-to-assign-the-nft-to-an-existing-collection-at-the-time-of-creation-the-selector-should-fetch-available-collections-and-let-the-user-pick-one-before-submitting",
-      "title": "In the NFT upload/mint form (Upload page and/or MintNFTModal), add a collection selector field that allows the user to assign the NFT to an existing collection at the time of creation. The selector should fetch available collections and let the user pick one before submitting.",
+      "id": "feature-resolve-the-indefinitely-hanging-berechtigungen-werden-gepr-ft-permissions-check-loading-state-on-the-admindashboard-page-the-page-must-complete-its-permission-check-quickly-and-either-grant-access-to-the-admin-area-or-redirect-show-an-error-it-must-not-remain-stuck-indefinitely",
+      "title": "Resolve the indefinitely-hanging 'Berechtigungen werden geprüft' (permissions check) loading state on the AdminDashboard page. The page must complete its permission check quickly and either grant access to the admin area or redirect/show an error — it must not remain stuck indefinitely.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-reduce-the-visual-size-of-the-mint-button-in-the-nft-upload-form-and-or-mintnftmodal-so-it-is-proportionate-to-the-other-form-controls-rather-than-oversized",
-      "title": "Reduce the visual size of the Mint button in the NFT upload form and/or MintNFTModal so it is proportionate to the other form controls rather than oversized.",
+      "id": "feature-ensure-the-useiscalleradmin-hook-always-resolves-to-a-definitive-value-true-false-or-error-within-a-reasonable-timeout-even-when-the-backend-actor-is-slow-to-initialize-or-the-user-is-unauthenticated-add-a-hard-timeout-fallback-so-the-hook-never-stays-in-a-pending-state-indefinitely",
+      "title": "Ensure the `useIsCallerAdmin` hook always resolves to a definitive value (true, false, or error) within a reasonable timeout, even when the backend actor is slow to initialize or the user is unauthenticated. Add a hard timeout fallback so the hook never stays in a pending state indefinitely.",
       "reqIds": [
         "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-useactor-hook-initializes-deterministically-and-does-not-silently-stall-if-actor-creation-fails-or-the-identity-is-not-yet-available-the-hook-must-surface-an-error-or-return-a-stable-null-undefined-state-promptly-so-dependent-hooks-and-pages-can-react-accordingly",
+      "title": "Ensure the `useActor` hook initializes deterministically and does not silently stall. If actor creation fails or the identity is not yet available, the hook must surface an error or return a stable null/undefined state promptly so dependent hooks and pages can react accordingly.",
+      "reqIds": [
+        "REQ-3"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [],
-  "projectName": "Add collection assignment to NFT upload form and reduce Mint button size",
+  "projectName": "Fix slow loading / stuck permissions check on Admin Dashboard",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

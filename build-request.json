@@ -1,52 +1,66 @@
 {
   "kind": "build_request",
-  "title": "Add collection assignment to NFT upload form and reduce Mint button size",
-  "priority": "normal",
+  "title": "Fix slow loading / stuck permissions check on Admin Dashboard",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "In the NFT upload/mint form (Upload page and/or MintNFTModal), add a collection selector field that allows the user to assign the NFT to an existing collection at the time of creation. The selector should fetch available collections and let the user pick one before submitting.",
+      "text": "Resolve the indefinitely-hanging 'Berechtigungen werden geprüft' (permissions check) loading state on the AdminDashboard page. The page must complete its permission check quickly and either grant access to the admin area or redirect/show an error — it must not remain stuck indefinitely.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-user-collection"
+          "msg-1"
         ],
         "quotes": [
-          "ich kann keine möglichkeit, das NFT eine Kollektion zuzuordnen finden"
+          "die Seite lädt immernoch sehr lange und führt nicht weiter"
         ]
       },
       "acceptanceCriteria": [
-        "A collection dropdown/selector is visible in the NFT upload form",
-        "The dropdown is populated with collections fetched from the backend",
-        "The selected collection is passed along when creating/minting the NFT",
-        "If no collection is selected, the field is either optional or shows a clear placeholder"
+        "The 'Berechtigungen werden geprüft' loading screen resolves within 3 seconds after the page mounts.",
+        "If the user is an admin, the admin dashboard tabs (Collections, NFTs) are displayed after the check.",
+        "If the user is not an admin or not authenticated, an appropriate message or redirect is shown rather than an endless spinner.",
+        "No infinite loading state or unresolved promise occurs under any authentication state (logged in, logged out, actor unavailable)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Reduce the visual size of the Mint button in the NFT upload form and/or MintNFTModal so it is proportionate to the other form controls rather than oversized.",
+      "text": "Ensure the `useIsCallerAdmin` hook always resolves to a definitive value (true, false, or error) within a reasonable timeout, even when the backend actor is slow to initialize or the user is unauthenticated. Add a hard timeout fallback so the hook never stays in a pending state indefinitely.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-user-collection"
-        ],
-        "quotes": [
-          "Der Mint Buttom muß auch nicht so riesig sein"
+          "msg-1"
         ]
       },
       "acceptanceCriteria": [
-        "The Mint button is no longer visually dominant compared to other form elements",
-        "The button size is consistent with the general button style used elsewhere in the app"
+        "The hook settles (returns a non-pending result) within at most 5 seconds regardless of backend actor state.",
+        "When unauthenticated, the hook immediately returns false rather than waiting for an actor call.",
+        "A timeout mechanism (e.g. 5 s) causes the hook to resolve as false/error rather than staying in isLoading state."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Ensure the `useActor` hook initializes deterministically and does not silently stall. If actor creation fails or the identity is not yet available, the hook must surface an error or return a stable null/undefined state promptly so dependent hooks and pages can react accordingly.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The actor hook does not remain in a loading state if the Internet Identity session is not present.",
+        "An error state is surfaced (not swallowed) when actor creation fails.",
+        "Dependent hooks (`useIsCallerAdmin`, `useGetCallerUserProfile`) react correctly to an unavailable actor and do not block page rendering."
       ]
     }
   ],
   "constraints": [
-    "Do not add or modify any credit/billing/payment logic"
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "All fixes must be implemented in the AdminDashboard page and/or by creating new wrapper hooks — not by editing the immutable hook files."
   ],
   "nonGoals": [
-    "Adding new backend endpoints for collection assignment (use existing ones)",
-    "Changing the overall page layout beyond the form adjustments",
-    "Any credit or payment calculations"
+    "Redesigning the admin UI layout or adding new admin features.",
+    "Changing backend permission logic in main.mo.",
+    "Modifying authentication flow or Internet Identity integration."
   ],
   "imageRequirements": {
     "required": [],

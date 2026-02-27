@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-the-nft-upload-mint-form-upload-page-and-or-mintnftmodal-add-a-collection-selector-field-that-allows-the-user-to-assign-the-nft-to-an-existing-collection-at-the-time-of-creation-the-selector-should-fetch-available-collections-and-let-the-user-pick-one-before-submitting",
-      "featureTitle": "In the NFT upload/mint form (Upload page and/or MintNFTModal), add a collection selector field that allows the user to assign the NFT to an existing collection at the time of creation. The selector should fetch available collections and let the user pick one before submitting.",
+      "featureId": "feature-resolve-the-indefinitely-hanging-berechtigungen-werden-gepr-ft-permissions-check-loading-state-on-the-admindashboard-page-the-page-must-complete-its-permission-check-quickly-and-either-grant-access-to-the-admin-area-or-redirect-show-an-error-it-must-not-remain-stuck-indefinitely",
+      "featureTitle": "Resolve the indefinitely-hanging 'Berechtigungen werden geprüft' (permissions check) loading state on the AdminDashboard page. The page must complete its permission check quickly and either grant access to the admin area or redirect/show an error — it must not remain stuck indefinitely.",
       "files": [
-        "frontend/src/pages/Upload.tsx"
+        "frontend/src/pages/AdminDashboard.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -22,10 +22,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-reduce-the-visual-size-of-the-mint-button-in-the-nft-upload-form-and-or-mintnftmodal-so-it-is-proportionate-to-the-other-form-controls-rather-than-oversized",
-      "featureTitle": "Reduce the visual size of the Mint button in the NFT upload form and/or MintNFTModal so it is proportionate to the other form controls rather than oversized.",
+      "featureId": "feature-ensure-the-useiscalleradmin-hook-always-resolves-to-a-definitive-value-true-false-or-error-within-a-reasonable-timeout-even-when-the-backend-actor-is-slow-to-initialize-or-the-user-is-unauthenticated-add-a-hard-timeout-fallback-so-the-hook-never-stays-in-a-pending-state-indefinitely",
+      "featureTitle": "Ensure the `useIsCallerAdmin` hook always resolves to a definitive value (true, false, or error) within a reasonable timeout, even when the backend actor is slow to initialize or the user is unauthenticated. Add a hard timeout fallback so the hook never stays in a pending state indefinitely.",
       "files": [
-        "frontend/src/pages/Upload.tsx"
+        "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -38,6 +38,26 @@
       ],
       "testIds": [
         "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-useactor-hook-initializes-deterministically-and-does-not-silently-stall-if-actor-creation-fails-or-the-identity-is-not-yet-available-the-hook-must-surface-an-error-or-return-a-stable-null-undefined-state-promptly-so-dependent-hooks-and-pages-can-react-accordingly",
+      "featureTitle": "Ensure the `useActor` hook initializes deterministically and does not silently stall. If actor creation fails or the identity is not yet available, the hook must surface an error or return a stable null/undefined state promptly so dependent hooks and pages can react accordingly.",
+      "files": [
+        "frontend/src/pages/AdminDashboard.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
       ],
       "confidence": "high"
     }

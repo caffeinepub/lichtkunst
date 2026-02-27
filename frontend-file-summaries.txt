@@ -15,7 +15,7 @@
   "frontend/src/hooks/useUploadArtwork.ts": "Stub mutation hook that always throws an error indicating the upload feature has been replaced by the NFT system.",
   "frontend/src/hooks/useGetCallerUserProfile.ts": "Query hook for fetching caller's user profile with proper loading state to prevent modal flash.",
   "frontend/src/hooks/useSaveCallerUserProfile.ts": "Mutation hook for saving caller's user profile.",
-  "frontend/src/hooks/useIsCallerAdmin.ts": "Query hook checking if caller has admin permissions.",
+  "frontend/src/hooks/useIsCallerAdmin.ts": "Query hook checking if the caller has admin permissions; now guards on `!!identity`, `!isInitializing`, and `!actorFetching` before enabling the query, uses the principal as part of the query key, and returns a combined `isLoading` state that only counts as loading when the user is authenticated.",
   "frontend/src/index.css": "Global styles with warm, luminous OKLCH color palette for light art aesthetic, custom fonts (Playfair Display serif, Inter sans-serif).",
   "frontend/tailwind.config.js": "Tailwind configuration with custom color tokens, elegant typography (Playfair Display, Inter), varied border radius, and custom animations.",
   "frontend/src/components/NFTExplanation.tsx": "NFT explanation section with heading styled to match NFTCollectionsSection (font-weight 100, same size/tracking/icons), reduced top padding (pt-6) to sit closer to the collections section above.",
@@ -48,7 +48,7 @@
   "frontend/src/components/AdminCollectionList.tsx": "List component displaying all backend collections with edit (via Dialog) and delete (with AlertDialog confirmation) actions, loading skeletons, empty state, and German toast notifications.",
   "frontend/src/components/AdminNFTForm.tsx": "Admin form for creating/editing NFT items; passes the `File` object directly to `uploadImage` (fixing the Uint8Array type error), with collection selector, image preview, upload progress, and German toast notifications.",
   "frontend/src/components/AdminNFTList.tsx": "List component displaying all backend NFTs with thumbnail, collection name, price badge, and edit/delete (with AlertDialog confirmation) actions.",
-  "frontend/src/pages/AdminDashboard.tsx": "Admin-only dashboard with Collections and NFTs tabs; manages `editingNFT` state locally and passes the required `onEdit` prop to `AdminNFTList`, guarded by identity and isAdmin checks.",
+  "frontend/src/pages/AdminDashboard.tsx": "Admin-only dashboard using the new `useIsCallerAdminWithTimeout` hook; handles each state (initializing, unauthenticated, loading, timed out, error, access denied, admin granted) with distinct German-language UI screens and a reload button for timeout/error states.",
   "frontend/src/hooks/useUploadImage.ts": "Custom hook for uploading image files via the backend actor; includes a `parseAuthError` helper that converts authorization trap messages into user-friendly German error messages.",
   "frontend/src/hooks/useGetNFT.ts": "New React Query hook that fetches a single NFT by ID from the backend's getNFT method, with query key ['nft-item', id] and enabled only when actor and id are available.",
   "frontend/src/pages/NFTDetail.tsx": "NFT detail page at /nft/$id showing full NFT info including on-chain details section with ICRC-7 token ID, mint date, price, and ICP Explorer link when tokenId is available; includes marketplace CTA buttons.",
@@ -60,5 +60,6 @@
   "frontend/src/components/NFTDetailModal.tsx": "Modal dialog showing full NFT details including image, title, description, token ID, mint date, price, owner principal, and canister address — all with individual copy-to-clipboard buttons and German toast notifications, plus an ICP Dashboard explorer link.",
   "frontend/src/utils/formatPrincipal.ts": "Utility functions for formatting ICP principal addresses — `shortenPrincipal` truncates to first N + last M chars with ellipsis, and `formatPrincipalForDisplay` wraps it with a shorten flag.",
   "frontend/src/components/PrincipalDisplay.tsx": "Reusable component that displays an ICP principal address (full or shortened) with a tooltip showing the full value, a copy-to-clipboard button, and a German toast notification on successful copy.",
-  "frontend/src/hooks/useGetMyIssuedNFTs.ts": "React Query hook that calls `actor.listMyNFTs()` to fetch only the NFTs owned by the currently authenticated user, keyed by the user's principal and enabled only when authenticated."
+  "frontend/src/hooks/useGetMyIssuedNFTs.ts": "React Query hook that calls `actor.listMyNFTs()` to fetch only the NFTs owned by the currently authenticated user, keyed by the user's principal and enabled only when authenticated.",
+  "frontend/src/hooks/useIsCallerAdminWithTimeout.ts": "New hook that imperatively checks admin status using direct actor calls with a 5-second hard timeout; immediately resolves to false when unauthenticated, and races the backend call against the timeout to prevent infinite loading states."
 }
