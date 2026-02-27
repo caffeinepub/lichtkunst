@@ -1,108 +1,162 @@
-import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import React, { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useIsCallerAdmin } from '../hooks/useIsCallerAdmin';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ShieldCheck, FolderOpen, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import AdminCollectionForm from '../components/AdminCollectionForm';
 import AdminCollectionList from '../components/AdminCollectionList';
 import AdminNFTForm from '../components/AdminNFTForm';
 import AdminNFTList from '../components/AdminNFTList';
-import type { NFTCollection, NFTItem } from '../backend';
+import { ShieldCheck, FolderOpen, ImageIcon, Loader2 } from 'lucide-react';
+import type { NFTItem } from '../backend';
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
   const { identity } = useInternetIdentity();
-  const { data: isAdmin, isLoading: isCheckingAdmin } = useIsCallerAdmin();
+  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
 
-  const [editingCollection, setEditingCollection] = useState<NFTCollection | null>(null);
+  const [showNFTForm, setShowNFTForm] = useState(false);
   const [editingNFT, setEditingNFT] = useState<NFTItem | null>(null);
 
-  // Auth guard
-  if (!identity && !isCheckingAdmin) {
-    navigate({ to: '/' });
-    return null;
-  }
-
-  if (!isCheckingAdmin && !isAdmin) {
-    navigate({ to: '/' });
-    return null;
-  }
-
-  if (isCheckingAdmin) {
+  if (!identity) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <ShieldCheck className="w-12 h-12 text-muted-foreground mx-auto" />
+          <h2 className="text-xl font-semibold">Anmeldung erforderlich</h2>
+          <p className="text-muted-foreground">Bitte melden Sie sich an, um auf das Admin-Dashboard zuzugreifen.</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="container mx-auto max-w-5xl px-4 py-10">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="mb-2 flex items-center gap-2 text-muted-foreground/50">
-          <ShieldCheck className="h-4 w-4" />
-          <span className="text-xs font-thin tracking-[0.2em] uppercase">Admin-Bereich</span>
-        </div>
-        <h1 className="font-serif text-3xl font-thin tracking-wide text-foreground/80">
-          NFT Verwaltung
-        </h1>
-        <p className="mt-1 text-sm font-thin text-muted-foreground/60">
-          Kollektionen und NFT-Kunstwerke verwalten
-        </p>
+  if (adminLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
+    );
+  }
 
-      <Tabs defaultValue="collections">
-        <TabsList className="mb-6 grid w-full grid-cols-2 max-w-sm">
-          <TabsTrigger value="collections" className="gap-1.5 text-xs font-thin tracking-wide">
-            <FolderOpen className="h-3.5 w-3.5" />
-            Kollektionen
-          </TabsTrigger>
-          <TabsTrigger value="nfts" className="gap-1.5 text-xs font-thin tracking-wide">
-            <Sparkles className="h-3.5 w-3.5" />
-            NFTs
-          </TabsTrigger>
-        </TabsList>
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <ShieldCheck className="w-12 h-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-semibold">Zugriff verweigert</h2>
+          <p className="text-muted-foreground">Sie haben keine Berechtigung, auf das Admin-Dashboard zuzugreifen.</p>
+        </div>
+      </div>
+    );
+  }
 
-        {/* Collections Tab */}
-        <TabsContent value="collections" className="space-y-6">
-          <AdminCollectionForm
-            editingCollection={editingCollection}
-            onDone={() => setEditingCollection(null)}
-          />
+  const handleEditNFT = (nft: NFTItem) => {
+    setEditingNFT(nft);
+    setShowNFTForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNFTFormDone = () => {
+    setShowNFTForm(false);
+    setEditingNFT(null);
+  };
+
+  return (
+    <div className="min-h-screen py-10 px-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 flex items-center gap-3">
+          <ShieldCheck className="w-7 h-7 text-primary" />
           <div>
-            <h2 className="mb-3 text-xs font-thin tracking-[0.2em] uppercase text-muted-foreground/60">
-              Vorhandene Kollektionen
-            </h2>
-            <AdminCollectionList
-              onEdit={(collection) => {
-                setEditingCollection(collection);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
+            <h1 className="text-2xl font-serif font-light tracking-wide">Admin Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Verwalten Sie Kollektionen und NFTs</p>
           </div>
-        </TabsContent>
+        </div>
 
-        {/* NFTs Tab */}
-        <TabsContent value="nfts" className="space-y-6">
-          <AdminNFTForm
-            editingNFT={editingNFT}
-            onDone={() => setEditingNFT(null)}
-          />
-          <div>
-            <h2 className="mb-3 text-xs font-thin tracking-[0.2em] uppercase text-muted-foreground/60">
-              Vorhandene NFTs
-            </h2>
-            <AdminNFTList
-              onEdit={(nft) => {
-                setEditingNFT(nft);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
-          </div>
-        </TabsContent>
-      </Tabs>
+        <Tabs defaultValue="collections">
+          <TabsList className="mb-6">
+            <TabsTrigger value="collections" className="flex items-center gap-2">
+              <FolderOpen className="w-4 h-4" />
+              Kollektionen
+            </TabsTrigger>
+            <TabsTrigger value="nfts" className="flex items-center gap-2">
+              <ImageIcon className="w-4 h-4" />
+              NFTs
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Collections Tab */}
+          <TabsContent value="collections" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-serif font-light text-lg">Neue Kollektion erstellen</CardTitle>
+                <CardDescription>
+                  Erstellen Sie eine neue Kollektion, um NFTs zu organisieren. Die erste Kollektion heißt z.B.
+                  „Tafelmalerei".
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AdminCollectionForm />
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            <div>
+              <h2 className="text-base font-medium mb-4 flex items-center gap-2">
+                <FolderOpen className="w-4 h-4 text-muted-foreground" />
+                Vorhandene Kollektionen
+              </h2>
+              <AdminCollectionList />
+            </div>
+          </TabsContent>
+
+          {/* NFTs Tab */}
+          <TabsContent value="nfts" className="space-y-6">
+            {showNFTForm ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-serif font-light text-lg">
+                    {editingNFT ? 'NFT bearbeiten' : 'Neues NFT erstellen'}
+                  </CardTitle>
+                  <CardDescription>
+                    {editingNFT
+                      ? 'Bearbeiten Sie die Details des NFTs.'
+                      : 'Fügen Sie ein neues NFT zu einer Kollektion hinzu.'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AdminNFTForm
+                    nft={editingNFT ?? undefined}
+                    onSuccess={handleNFTFormDone}
+                    onCancel={handleNFTFormDone}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="flex justify-end">
+                <button
+                  onClick={() => { setEditingNFT(null); setShowNFTForm(true); }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  Neues NFT erstellen
+                </button>
+              </div>
+            )}
+
+            <Separator />
+
+            <div>
+              <h2 className="text-base font-medium mb-4 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                Vorhandene NFTs
+              </h2>
+              <AdminNFTList onEdit={handleEditNFT} />
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

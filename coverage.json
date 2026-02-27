@@ -1,86 +1,47 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T18:00:42.404Z",
+  "generatedAt": "2026-02-27T19:37:46.106Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 4,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add a clearly visible 'Mint NFT' button in the NFT Gallery page that opens a minting modal/form. The user must be logged in with Internet Identity to mint. The mint action must call the backend's mint function and associate the minted NFT with the caller's principal (Identity).",
+        "summary": "In the NFT upload/mint form (Upload page and/or MintNFTModal), add a collection selector field that allows the user to assign the NFT to an existing collection at the time of creation. The selector should fetch available collections and let the user pick one before submitting.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/NFTGallery.tsx",
+          "frontend/src/pages/Upload.tsx",
           "frontend/src/components/MintNFTModal.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/NFTGallery.tsx"
+          "frontend/src/pages/Upload.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Display the authenticated user's ICP principal address (from Internet Identity) prominently in the NFT Gallery page. It should be shown as a copyable field. Also display the canister's principal address so users know the on-chain location of the NFT contract.",
+        "summary": "Reduce the visual size of the Mint button in the NFT upload form and/or MintNFTModal so it is proportionate to the other form controls rather than oversized.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/NFTGallery.tsx",
-          "frontend/src/components/PrincipalDisplay.tsx"
+          "frontend/src/pages/Upload.tsx",
+          "frontend/src/components/MintNFTModal.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/NFTGallery.tsx",
-          "frontend/src/components/PrincipalDisplay.tsx"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Ensure that minted NFTs are stored in the backend linked to the minting user's principal ID. Add a 'My NFTs' section or filter in the NFT Gallery page that shows only the NFTs minted by (and thus owned by) the currently logged-in Internet Identity principal.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/NFTGallery.tsx",
-          "frontend/src/hooks/useGetMyIssuedNFTs.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/NFTGallery.tsx",
-          "frontend/src/hooks/useGetMyIssuedNFTs.ts"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Each NFT card in the gallery (both in the 'All NFTs' view and 'My NFTs' view) must display the owner's principal address (shortened) and the token ID. The NFT detail modal must display the full owner principal, token ID, mint date, and a link to the ICP dashboard/explorer for on-chain verification.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/IssuedNFTCard.tsx",
-          "frontend/src/components/NFTDetailModal.tsx",
-          "frontend/src/utils/formatPrincipal.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/IssuedNFTCard.tsx",
-          "frontend/src/components/NFTDetailModal.tsx",
-          "frontend/src/utils/formatPrincipal.ts"
+          "frontend/src/pages/Upload.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/IssuedNFTCard.tsx",
-    "frontend/src/components/NFTDetailModal.tsx",
-    "frontend/src/components/PrincipalDisplay.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useGetMyIssuedNFTs.ts",
-    "frontend/src/pages/NFTGallery.tsx",
-    "frontend/src/utils/formatPrincipal.ts",
+    "frontend/src/pages/Upload.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,71 +1,30 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "NFT gallery app on Internet Computer where users can mint NFTs, view their ICP address, and have minted NFTs assigned to their Internet Identity wallet.",
-  "architectural_notes": [
-    "App runs on Internet Computer (ICP) with canister-based storage for persistent NFT data",
-    "Authentication via Internet Identity; NFT ownership tied to user's principal/identity"
-  ],
-  "known_issues": [
-    "Data in draft deployments is not persistent — NFTs minted in draft are lost on rebuild"
-  ],
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-add-a-clearly-visible-mint-nft-button-in-the-nft-gallery-page-that-opens-a-minting-modal-form-the-user-must-be-logged-in-with-internet-identity-to-mint-the-mint-action-must-call-the-backend-s-mint-function-and-associate-the-minted-nft-with-the-caller-s-principal-identity",
-      "title": "Add a clearly visible 'Mint NFT' button in the NFT Gallery page that opens a minting modal/form. The user must be logged in with Internet Identity to mint. The mint action must call the backend's mint function and associate the minted NFT with the caller's principal (Identity).",
+      "id": "feature-in-the-nft-upload-mint-form-upload-page-and-or-mintnftmodal-add-a-collection-selector-field-that-allows-the-user-to-assign-the-nft-to-an-existing-collection-at-the-time-of-creation-the-selector-should-fetch-available-collections-and-let-the-user-pick-one-before-submitting",
+      "title": "In the NFT upload/mint form (Upload page and/or MintNFTModal), add a collection selector field that allows the user to assign the NFT to an existing collection at the time of creation. The selector should fetch available collections and let the user pick one before submitting.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-display-the-authenticated-user-s-icp-principal-address-from-internet-identity-prominently-in-the-nft-gallery-page-it-should-be-shown-as-a-copyable-field-also-display-the-canister-s-principal-address-so-users-know-the-on-chain-location-of-the-nft-contract",
-      "title": "Display the authenticated user's ICP principal address (from Internet Identity) prominently in the NFT Gallery page. It should be shown as a copyable field. Also display the canister's principal address so users know the on-chain location of the NFT contract.",
+      "id": "feature-reduce-the-visual-size-of-the-mint-button-in-the-nft-upload-form-and-or-mintnftmodal-so-it-is-proportionate-to-the-other-form-controls-rather-than-oversized",
+      "title": "Reduce the visual size of the Mint button in the NFT upload form and/or MintNFTModal so it is proportionate to the other form controls rather than oversized.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
-    },
-    {
-      "id": "feature-ensure-that-minted-nfts-are-stored-in-the-backend-linked-to-the-minting-user-s-principal-id-add-a-my-nfts-section-or-filter-in-the-nft-gallery-page-that-shows-only-the-nfts-minted-by-and-thus-owned-by-the-currently-logged-in-internet-identity-principal",
-      "title": "Ensure that minted NFTs are stored in the backend linked to the minting user's principal ID. Add a 'My NFTs' section or filter in the NFT Gallery page that shows only the NFTs minted by (and thus owned by) the currently logged-in Internet Identity principal.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-each-nft-card-in-the-gallery-both-in-the-all-nfts-view-and-my-nfts-view-must-display-the-owner-s-principal-address-shortened-and-the-token-id-the-nft-detail-modal-must-display-the-full-owner-principal-token-id-mint-date-and-a-link-to-the-icp-dashboard-explorer-for-on-chain-verification",
-      "title": "Each NFT card in the gallery (both in the 'All NFTs' view and 'My NFTs' view) must display the owner's principal address (shortened) and the token ID. The NFT detail modal must display the full owner principal, token ID, mint date, and a link to the ICP dashboard/explorer for on-chain verification.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "NFT minting functionality in the gallery",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Display user's ICP address in the gallery",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Minted NFTs are assigned to and stored in the user's Internet Identity wallet",
-      "reqIds": [],
-      "status": "pending"
-    }
-  ],
-  "gameProjectType": "none",
-  "projectName": "NFT Gallery",
+  "new_feature_requests": [],
+  "projectName": "Add collection assignment to NFT upload form and reduce Mint button size",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

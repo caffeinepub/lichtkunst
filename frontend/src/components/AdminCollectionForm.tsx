@@ -1,139 +1,117 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { Loader2, Plus, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { NFTCollection } from '../backend';
+import { useCreateCollection } from '../hooks/useCreateCollection';
+import { useUpdateCollection } from '../hooks/useUpdateCollection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCreateCollection } from '../hooks/useCreateCollection';
-import { useUpdateCollection } from '../hooks/useUpdateCollection';
-import type { NFTCollection } from '../backend';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AdminCollectionFormProps {
-  editingCollection?: NFTCollection | null;
-  onDone?: () => void;
+  collection?: NFTCollection;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-function generateId(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') +
-    '-' +
-    Date.now().toString(36);
-}
+export default function AdminCollectionForm({ collection, onSuccess, onCancel }: AdminCollectionFormProps) {
+  const { mutateAsync: createCollection, isPending: isCreating } = useCreateCollection();
+  const { mutateAsync: updateCollection, isPending: isUpdating } = useUpdateCollection();
 
-export default function AdminCollectionForm({ editingCollection, onDone }: AdminCollectionFormProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState(collection?.name ?? '');
+  const [description, setDescription] = useState(collection?.description ?? '');
+  const [error, setError] = useState<string | null>(null);
 
-  const createCollection = useCreateCollection();
-  const updateCollection = useUpdateCollection();
-
-  const isEditing = !!editingCollection;
-  const isPending = createCollection.isPending || updateCollection.isPending;
+  const isEditing = !!collection;
+  const isPending = isCreating || isUpdating;
 
   useEffect(() => {
-    if (editingCollection) {
-      setName(editingCollection.name);
-      setDescription(editingCollection.description);
-    } else {
-      setName('');
-      setDescription('');
+    if (collection) {
+      setName(collection.name);
+      setDescription(collection.description);
     }
-  }, [editingCollection]);
+  }, [collection]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
     if (!name.trim()) {
-      toast.error('Bitte einen Namen eingeben.');
+      setError('Bitte geben Sie einen Namen für die Kollektion ein.');
       return;
     }
 
     try {
-      if (isEditing && editingCollection) {
-        await updateCollection.mutateAsync({
-          id: editingCollection.id,
-          name: name.trim(),
-          description: description.trim(),
-        });
-        toast.success('Kollektion erfolgreich aktualisiert.');
+      if (isEditing && collection) {
+        await updateCollection({ id: collection.id, name: name.trim(), description: description.trim() });
+        toast.success('Kollektion erfolgreich aktualisiert');
       } else {
-        const id = generateId(name.trim());
-        await createCollection.mutateAsync({
-          id,
-          name: name.trim(),
-          description: description.trim(),
-        });
-        toast.success('Kollektion erfolgreich erstellt.');
+        const id = `col-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        await createCollection({ id, name: name.trim(), description: description.trim() });
+        toast.success('Kollektion erfolgreich erstellt');
         setName('');
         setDescription('');
       }
-      onDone?.();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unbekannter Fehler';
-      toast.error(`Fehler: ${message}`);
+      onSuccess?.();
+    } catch (err: any) {
+      const msg = err?.message ?? 'Fehler beim Speichern der Kollektion.';
+      setError(msg);
+      toast.error(msg);
     }
   };
 
   return (
-    <Card className="border-border/50 bg-card/50 backdrop-blur">
-      <CardHeader className="pb-4">
-        <CardTitle className="font-serif text-lg font-thin tracking-wide">
-          {isEditing ? 'Kollektion bearbeiten' : 'Neue Kollektion erstellen'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="col-name" className="text-xs font-thin tracking-wide uppercase text-muted-foreground">
-              Name *
-            </Label>
-            <Input
-              id="col-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="z.B. Lichtei"
-              disabled={isPending}
-              className="bg-background/50"
-            />
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="col-name">Name *</Label>
+        <Input
+          id="col-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="z.B. Tafelmalerei"
+          required
+        />
+      </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="col-desc" className="text-xs font-thin tracking-wide uppercase text-muted-foreground">
-              Beschreibung
-            </Label>
-            <Textarea
-              id="col-desc"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Kurze Beschreibung der Kollektion..."
-              rows={3}
-              disabled={isPending}
-              className="bg-background/50 resize-none"
-            />
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="col-description">Beschreibung (optional)</Label>
+        <Textarea
+          id="col-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Kurze Beschreibung der Kollektion..."
+          rows={3}
+        />
+      </div>
 
-          <div className="flex gap-2 pt-1">
-            <Button type="submit" disabled={isPending} size="sm" className="gap-1.5">
-              {isPending ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : isEditing ? (
-                <Save className="h-3.5 w-3.5" />
-              ) : (
-                <Plus className="h-3.5 w-3.5" />
-              )}
-              {isEditing ? 'Speichern' : 'Erstellen'}
-            </Button>
-            {isEditing && onDone && (
-              <Button type="button" variant="ghost" size="sm" onClick={onDone} disabled={isPending}>
-                Abbrechen
-              </Button>
-            )}
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="flex gap-2 justify-end">
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+            Abbrechen
+          </Button>
+        )}
+        <Button type="submit" disabled={isPending || !name.trim()}>
+          {isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              {isEditing ? 'Wird aktualisiert...' : 'Wird erstellt...'}
+            </>
+          ) : isEditing ? (
+            'Kollektion aktualisieren'
+          ) : (
+            'Kollektion erstellen'
+          )}
+        </Button>
+      </div>
+    </form>
   );
 }
