@@ -1,54 +1,38 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix slow loading / stuck permissions check on Admin Dashboard",
+  "title": "Reduce hero banner height by half and show only one quote (UZ)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Resolve indefinitely-hanging 'Berechtigungen werden geprüft' loading state on AdminDashboard by ensuring the permission check completes quickly and either grants access or shows an appropriate message",
+      "summary": "Reduce the hero banner image height on the Gallery page to exactly half its current value",
       "acceptanceCriteria": [
-        "The 'Berechtigungen werden geprüft' loading screen resolves within 3 seconds after the page mounts.",
-        "If the user is an admin, the admin dashboard tabs (Collections, NFTs) are displayed after the check.",
-        "If the user is not an admin or not authenticated, an appropriate message or redirect is shown rather than an endless spinner.",
-        "No infinite loading state or unresolved promise occurs under any authentication state (logged in, logged out, actor unavailable)."
+        "The hero banner section height is 50% of its previous height.",
+        "The banner image still fills the reduced height correctly (no white space or overflow).",
+        "Layout below the banner is not broken."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "path": "frontend/src/pages/Gallery.tsx",
           "operation": "modify",
-          "description": "Replace the current permission check logic with a robust implementation that includes a hard timeout mechanism (5 seconds maximum). Add early return for unauthenticated users. Ensure the loading state resolves to either admin access granted, access denied message, or timeout error state. Add error boundary handling for actor initialization failures. Display appropriate German-language messages for each state (loading, access denied, timeout, error)."
+          "description": "Update the hero banner section's height-related CSS classes or inline styles to reduce the current height by exactly 50%. If the banner uses h-[600px], change it to h-[300px]. If it uses h-screen, change to h-[50vh]. Ensure the background image (frontend/public/assets/generated/hero-light-art.dim_1920x1080.png) maintains proper cover/fill behavior. Verify that no visual artifacts (white space, overflow, or cut-off content) are introduced and that the layout elements below the banner remain properly positioned."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Ensure useIsCallerAdmin hook always resolves within a reasonable timeout and handles unauthenticated state immediately",
+      "summary": "Display only the UZ quote (Russell 'Geheimnis des Lichtes') in the hero banner, removing the Goethe quote and all rotation logic",
       "acceptanceCriteria": [
-        "The hook settles (returns a non-pending result) within at most 5 seconds regardless of backend actor state.",
-        "When unauthenticated, the hook immediately returns false rather than waiting for an actor call.",
-        "A timeout mechanism (e.g. 5 s) causes the hook to resolve as false/error rather than staying in isLoading state."
+        "Only one quote is displayed in the banner — the Russell 'Geheimnis des Lichtes' (UZ) quote.",
+        "The Goethe quote is no longer shown.",
+        "No rotation animation or carousel indicator is present.",
+        "The quote text is legible against the banner background."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-          "operation": "create",
-          "description": "Create a new wrapper hook that adds timeout and early-exit logic around the existing useIsCallerAdmin hook. Check authentication state from useInternetIdentity before attempting the actor call. If not authenticated, immediately return { isAdmin: false, isLoading: false, error: null }. If authenticated, race the existing useIsCallerAdmin query against a 5-second timeout using Promise.race. On timeout, return { isAdmin: false, isLoading: false, error: new Error('Admin check timed out') }. Export the hook for use in AdminDashboard."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Ensure useActor hook surfaces errors promptly and dependent hooks react correctly to unavailable actor state",
-      "acceptanceCriteria": [
-        "The actor hook does not remain in a loading state if the Internet Identity session is not present.",
-        "An error state is surfaced (not swallowed) when actor creation fails.",
-        "Dependent hooks (useIsCallerAdmin, useGetCallerUserProfile) react correctly to an unavailable actor and do not block page rendering."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "path": "frontend/src/pages/Gallery.tsx",
           "operation": "modify",
-          "description": "Add explicit checks for actor availability and error states from the useActor hook. If actor is unavailable or in error state after a brief delay (1-2 seconds), display an error message in German explaining the connection issue. Ensure the page does not remain in loading state when actor initialization fails. Add fallback UI for actor errors that allows the user to retry or navigate away."
+          "description": "Remove the rotating quotes array/state and carousel logic from the hero banner. Keep only the Russell 'Geheimnis des Lichtes' (UZ) quote as a static text element. Remove the Goethe quote entirely. Delete any interval timers, animation transitions, carousel indicators (dots), or state management related to quote rotation. Ensure the remaining single quote is properly styled, centered, and readable against the banner background. Remove any dependencies on quote rotation such as useEffect hooks, currentQuoteIndex state, or animation classes."
         }
       ]
     }

@@ -1,6 +1,4 @@
 import Map "mo:core/Map";
-import Iter "mo:core/Iter";
-import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Principal "mo:core/Principal";
@@ -10,8 +8,6 @@ import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
-
-
 
 actor {
   type TokenId = Nat;
@@ -29,7 +25,7 @@ actor {
     title : Text;
     description : Text;
     imageData : Storage.ExternalBlob;
-    price : Nat; // in e8s ICP
+    price : Nat;
     owner : ?Principal;
     minted : Bool;
     mintedAt : ?Int;
@@ -158,7 +154,6 @@ actor {
       case (?_) {
         collections.remove(id);
 
-        // Remove NFTs belonging to this collection
         let keys = nfts.keys().toArray();
         for (key in keys.values()) {
           switch (nfts.get(key)) {

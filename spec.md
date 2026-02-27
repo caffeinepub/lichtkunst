@@ -1,12 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the indefinitely-hanging permissions check ("Berechtigungen werden geprüft") on the Admin Dashboard so it always resolves quickly.
+**Goal:** Reduce the hero banner height on the Gallery page to half its current size and replace the rotating quotes with a single static UZ quote.
 
 **Planned changes:**
-- Update the AdminDashboard page to handle all authentication states (logged in, logged out, actor unavailable) without getting stuck in a loading state.
-- Create a wrapper hook around `useIsCallerAdmin` that enforces a hard timeout (≤5 seconds), resolving to false/error instead of remaining pending indefinitely.
-- Ensure unauthenticated users are immediately shown a redirect or error message rather than an endless spinner.
-- Handle cases where the actor is unavailable or fails to initialize, surfacing an error state to the AdminDashboard page.
+- Reduce the hero banner image height on the Gallery page to exactly half its current value, ensuring the image still fills the area correctly
+- Remove the Goethe quote and all rotation/carousel logic from the hero banner
+- Display only the single static Russell "Geheimnis des Lichtes" (UZ) quote in the banner
 
-**User-visible outcome:** The Admin Dashboard permissions check completes within a few seconds under all conditions — admins see the dashboard, non-admins or unauthenticated users see an appropriate message or redirect, and no one gets stuck on an infinite loading screen.
+**User-visible outcome:** The Gallery page hero banner is shorter and shows one static quote instead of rotating between two.

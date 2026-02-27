@@ -1,66 +1,55 @@
 {
   "kind": "build_request",
-  "title": "Fix slow loading / stuck permissions check on Admin Dashboard",
-  "priority": "high",
+  "title": "Reduce hero banner height by half and show only one quote (UZ)",
+  "projectName": "Istvan Seidel Light Art",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Resolve the indefinitely-hanging 'Berechtigungen werden geprüft' (permissions check) loading state on the AdminDashboard page. The page must complete its permission check quickly and either grant access to the admin area or redirect/show an error — it must not remain stuck indefinitely.",
+      "text": "Reduce the hero banner image height on the Gallery page (frontend/src/pages/Gallery.tsx) to exactly half its current value. Adjust any related CSS classes or inline styles accordingly so the banner proportions and layout remain visually clean.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "die Seite lädt immernoch sehr lange und führt nicht weiter"
+          "Das Bannerbild bitte um die hälfte in der Höhe reduzieren"
         ]
       },
       "acceptanceCriteria": [
-        "The 'Berechtigungen werden geprüft' loading screen resolves within 3 seconds after the page mounts.",
-        "If the user is an admin, the admin dashboard tabs (Collections, NFTs) are displayed after the check.",
-        "If the user is not an admin or not authenticated, an appropriate message or redirect is shown rather than an endless spinner.",
-        "No infinite loading state or unresolved promise occurs under any authentication state (logged in, logged out, actor unavailable)."
+        "The hero banner section height is 50% of its previous height.",
+        "The banner image still fills the reduced height correctly (no white space or overflow).",
+        "Layout below the banner is not broken."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure the `useIsCallerAdmin` hook always resolves to a definitive value (true, false, or error) within a reasonable timeout, even when the backend actor is slow to initialize or the user is unauthenticated. Add a hard timeout fallback so the hook never stays in a pending state indefinitely.",
+      "text": "Update the rotating quotes section inside the hero banner on the Gallery page (frontend/src/pages/Gallery.tsx) to display only the UZ quote (from Russell, 'Geheimnis des Lichtes'). Remove the Goethe quote and any rotation/carousel logic so that a single static quote is shown.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
+        ],
+        "quotes": [
+          "Dann nur ein UZ"
         ]
       },
       "acceptanceCriteria": [
-        "The hook settles (returns a non-pending result) within at most 5 seconds regardless of backend actor state.",
-        "When unauthenticated, the hook immediately returns false rather than waiting for an actor call.",
-        "A timeout mechanism (e.g. 5 s) causes the hook to resolve as false/error rather than staying in isLoading state."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Ensure the `useActor` hook initializes deterministically and does not silently stall. If actor creation fails or the identity is not yet available, the hook must surface an error or return a stable null/undefined state promptly so dependent hooks and pages can react accordingly.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The actor hook does not remain in a loading state if the Internet Identity session is not present.",
-        "An error state is surfaced (not swallowed) when actor creation fails.",
-        "Dependent hooks (`useIsCallerAdmin`, `useGetCallerUserProfile`) react correctly to an unavailable actor and do not block page rendering."
+        "Only one quote is displayed in the banner — the Russell 'Geheimnis des Lichtes' (UZ) quote.",
+        "The Goethe quote is no longer shown.",
+        "No rotation animation or carousel indicator is present.",
+        "The quote text is legible against the banner background."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
-    "All fixes must be implemented in the AdminDashboard page and/or by creating new wrapper hooks — not by editing the immutable hook files."
+    "Do not modify any files listed under frontend.immutablePaths.",
+    "Do not alter the backend."
   ],
   "nonGoals": [
-    "Redesigning the admin UI layout or adding new admin features.",
-    "Changing backend permission logic in main.mo.",
-    "Modifying authentication flow or Internet Identity integration."
+    "Changing any other section of the Gallery page beyond the hero banner.",
+    "Modifying quote content/text beyond removing the Goethe entry.",
+    "Any backend changes."
   ],
   "imageRequirements": {
     "required": [],

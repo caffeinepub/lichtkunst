@@ -5,12 +5,18 @@ import type { NFTCollection } from '../backend';
 export function useGetAllCollections() {
   const { actor, isFetching: actorFetching } = useActor();
 
-  return useQuery<NFTCollection[]>({
+  const query = useQuery<NFTCollection[]>({
     queryKey: ['nft-collections'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return [];
       return actor.getAllCollections();
     },
     enabled: !!actor && !actorFetching,
+    staleTime: 30_000,
   });
+
+  return {
+    ...query,
+    isLoading: actorFetching || query.isLoading,
+  };
 }

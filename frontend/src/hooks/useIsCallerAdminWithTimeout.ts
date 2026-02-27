@@ -1,97 +1,124 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
 
-const TIMEOUT_MS = 5_000;
-
-export interface AdminCheckResult {
+interface AdminCheckResult {
   isAdmin: boolean;
   isLoading: boolean;
-  error: Error | null;
   timedOut: boolean;
+  error: Error | null;
+  retry: () => void;
 }
 
-/**
- * Wrapper hook that checks admin status with a hard timeout.
- * - If not authenticated: immediately returns isAdmin=false, isLoading=false.
- * - If authenticated: races the actor call against a 5-second timeout.
- * - On timeout: returns isAdmin=false, isLoading=false, timedOut=true.
- */
-export function useIsCallerAdminWithTimeout(): AdminCheckResult {
+export function useIsCallerAdminWithTimeout(timeoutMs = 15000): AdminCheckResult {
   const { actor, isFetching: actorFetching } = useActor();
   const { identity, isInitializing } = useInternetIdentity();
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [timedOut, setTimedOut] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  const checkedRef = useRef(false);
-  const identityKey = identity?.getPrincipal().toString() ?? null;
-
-  useEffect(() => {
-    // Reset state when identity changes
-    checkedRef.current = false;
-    setIsAdmin(false);
-    setIsLoading(true);
-    setError(null);
-    setTimedOut(false);
-  }, [identityKey]);
+  const mountedRef = useRef(true);
+  // Track which principal+retry combination we've already resolved
+  const resolvedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Still initializing identity from storage — wait
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const principalKey = identity?.getPrincipal().toString() ?? null;
+  // Include retryCount so a manual retry forces a new check
+  const checkKey = principalKey ? `${principalKey}:${retryCount}` : null;
+
+  useEffect(() => {
+    // Still initializing — keep loading
     if (isInitializing) {
       setIsLoading(true);
       return;
     }
 
-    // Not authenticated — resolve immediately
-    if (!identity) {
+    // Not authenticated — resolve immediately as non-admin
+    if (!identity || !principalKey) {
       setIsAdmin(false);
       setIsLoading(false);
+      setTimedOut(false);
       setError(null);
+      resolvedKeyRef.current = null;
       return;
     }
 
-    // Authenticated but actor not ready yet — wait (with timeout below)
+    // Actor not ready yet — keep loading, don't mark as resolved
     if (actorFetching || !actor) {
       setIsLoading(true);
-      // Fall through to timeout logic
+      return;
     }
 
-    if (checkedRef.current) return;
+    // Already successfully resolved for this exact key — skip
+    if (resolvedKeyRef.current === checkKey) {
+      return;
+    }
 
-    // Set up timeout
+    // Reset state for fresh check
+    setIsAdmin(false);
+    setTimedOut(false);
+    setError(null);
+    setIsLoading(true);
+
+    let cancelled = false;
+
     const timeoutId = setTimeout(() => {
-      if (!checkedRef.current) {
-        checkedRef.current = true;
+      if (!cancelled && mountedRef.current) {
         setTimedOut(true);
-        setIsAdmin(false);
         setIsLoading(false);
+        // Don't mark as resolved on timeout so retry can work
       }
-    }, TIMEOUT_MS);
+    }, timeoutMs);
 
-    // If actor is ready, perform the check
-    if (actor && !actorFetching) {
-      checkedRef.current = true;
-      clearTimeout(timeoutId);
-
-      actor
-        .isCallerAdmin()
-        .then((result) => {
+    actor
+      .isCallerAdmin()
+      .then((result) => {
+        clearTimeout(timeoutId);
+        if (!cancelled && mountedRef.current) {
           setIsAdmin(result);
           setIsLoading(false);
-          setError(null);
-        })
-        .catch((err: unknown) => {
+          setTimedOut(false);
+          // Mark this key as resolved so we don't re-check unnecessarily
+          resolvedKeyRef.current = checkKey;
+        }
+      })
+      .catch((err) => {
+        clearTimeout(timeoutId);
+        if (!cancelled && mountedRef.current) {
+          setError(err instanceof Error ? err : new Error(String(err)));
           setIsAdmin(false);
           setIsLoading(false);
-          setError(err instanceof Error ? err : new Error('Admin-Prüfung fehlgeschlagen'));
-        });
-    }
+          // Don't mark as resolved on error so retry can work
+        }
+      });
 
-    return () => clearTimeout(timeoutId);
-  }, [isInitializing, identity, actor, actorFetching, identityKey]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      // NOTE: Do NOT reset resolvedKeyRef here — if the check completed before
+      // cleanup, we want to keep the result. If it was cancelled mid-flight,
+      // resolvedKeyRef was never set, so the next render will re-run the check
+      // if dependencies change (e.g., actor becomes available again).
+    };
+  }, [actor, actorFetching, identity, isInitializing, principalKey, checkKey, timeoutMs]);
 
-  return { isAdmin, isLoading, error, timedOut };
+  const retry = useCallback(() => {
+    resolvedKeyRef.current = null;
+    setTimedOut(false);
+    setError(null);
+    setIsAdmin(false);
+    setIsLoading(true);
+    setRetryCount((c) => c + 1);
+  }, []);
+
+  return { isAdmin, isLoading, timedOut, error, retry };
 }

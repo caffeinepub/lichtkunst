@@ -1,24 +1,23 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T20:52:15.310Z",
-  "summary": "The diff introduces a new `useIsCallerAdminWithTimeout` wrapper hook and updates `AdminDashboard.tsx` to use it. REQ-1 and REQ-2 are well-addressed: the dashboard resolves the loading state deterministically, handles unauthenticated users immediately, shows timeout/error states, and the new hook has a hard 5-second timeout. REQ-3 is only partially addressed — the constraints prohibit modifying `useActor.ts`, and no wrapper or workaround fully surfaces actor initialization errors or ensures deterministic actor state for dependent hooks beyond what the new timeout hook provides.",
+  "generatedAt": "2026-02-27T22:01:10.255Z",
+  "summary": "The diff modifies frontend/src/pages/Gallery.tsx to address both requirements. REQ-2 (single static UZ quote, no Goethe, no carousel) is fully implemented. REQ-1 has the banner height set to h-[20vh] described as half of previous 40vh, satisfying the 50% reduction. However, the quote section has been moved outside the hero banner section into a separate section below it, whereas the original requirement specifies the quote should be inside the hero banner.",
   "missing_requirements": [
     {
-      "id": "REQ-3",
-      "requirement": "Ensure the `useActor` hook initializes deterministically and does not silently stall. If actor creation fails or the identity is not yet available, the hook must surface an error or return a stable null/undefined state promptly so dependent hooks and pages can react accordingly.",
-      "reason": "The diff does not modify `useActor.ts` (constrained) and does not add a wrapper hook around `useActor` that surfaces actor creation errors. The new `useIsCallerAdminWithTimeout` hook handles the timeout case but swallows actor initialization errors silently — it simply waits for `actor` to become non-null and falls through to the timeout. No explicit error state is surfaced when actor creation fails. The AC requiring 'an error state is surfaced (not swallowed) when actor creation fails' is not met via any wrapper.",
+      "id": "REQ-2",
+      "requirement": "Update the rotating quotes section inside the hero banner on the Gallery page to display only the UZ quote — the quote should be positioned inside/overlaid on the hero banner.",
+      "reason": "The diff places the UZ quote in a separate section element below the hero banner image section rather than overlaid inside the banner. The original requirement states the quotes section was inside the hero banner.",
       "evidence": [
-        "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
+        "frontend/src/pages/Gallery.tsx"
       ]
     }
   ],
   "hallucinated_features": [],
-  "confidence": 0.8,
+  "confidence": 0.72,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-    "frontend/src/pages/AdminDashboard.tsx",
+    "frontend/src/pages/Gallery.tsx",
     "project_state.json"
   ]
 }
