@@ -1,23 +1,48 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T13:50:07.517Z",
-  "summary": "The diff modifies useIsCallerAdminWithTimeout.ts and AdminDashboard.tsx to address the race condition and timeout issues in the Admin Dashboard. REQ-1 is largely addressed: the hook now waits for the actor to be ready before firing the admin check, arms a timeout, exposes an actorWaiting state, and includes a retry mechanism. REQ-2 is partially addressed in useIsCallerAdminWithTimeout.ts via anonymous identity detection and principal-keyed run logic, but useActor.ts is not modified and no wrapper hook is added to guarantee the actor is always instantiated with the authenticated identity.",
+  "generatedAt": "2026-02-28T14:49:01.207Z",
+  "summary": "The diff addresses REQ-1 and REQ-3 well, with actor-identity matching checks and proper loading/deferred states. REQ-2 (actor re-initialization on identity change, logout cache clearing) is partially addressed but not fully evidenced in the diff.",
   "missing_requirements": [
     {
       "id": "REQ-2",
-      "requirement": "Ensure the backend actor in useActor.ts is always instantiated using the authenticated Internet Identity principal when the user is logged in. The actor must not fall back to an anonymous identity while an authenticated identity is available.",
-      "reason": "The diff does not modify useActor.ts and no wrapper hook replacing its actor instantiation behavior is added. The ACs requiring that all backend calls use the authenticated actor, that the actor is re-created on identity changes, and that no admin backend call is made with an anonymous principal are not verifiably satisfied at the actor instantiation level.",
+      "requirement": "Ensure the backend actor used in all admin operations is always created with the authenticated Internet Identity principal, not an anonymous identity. Verify that useActor re-initializes the actor when the identity changes from anonymous to authenticated. Logging out resets the actor to an anonymous identity and clears relevant React Query caches.",
+      "reason": "The diff shows actorMatchesIdentity checks in useIsCallerAdmin and useIsCallerAdminWithTimeout to prevent stale-actor calls, but there is no evidence of changes to useActor itself being validated, nor any code showing logout clearing React Query caches (e.g., queryClient.clear() or queryClient.removeQueries on logout). No logout handler or cache invalidation logic is added elsewhere in AdminDashboard or a logout callback.",
       "evidence": [
+        "frontend/src/hooks/useIsCallerAdmin.ts",
         "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+        "frontend/src/pages/AdminDashboard.tsx"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Show a clear 'Access Denied' message in English if the admin check definitively fails.",
+      "reason": "The AdminDashboard.tsx is truncated so the access-denied state cannot be fully verified. The visible portion shows loading states in German but no English 'Access Denied' message is visible. REQ-3 explicitly requires the denied message to be in English.",
+      "evidence": [
         "frontend/src/pages/AdminDashboard.tsx"
       ]
     }
   ],
-  "hallucinated_features": [],
+  "hallucinated_features": [
+    {
+      "description": "Loading and connection messages in AdminDashboard are displayed in German ('Verbindung wird hergestellt', 'Initialisierung') rather than English for actor-waiting and loading states.",
+      "reason": "REQ-3 specifies English for the access-denied message and does not request German-language loading messages; these were added without explicit requirement.",
+      "evidence": [
+        "frontend/src/pages/AdminDashboard.tsx"
+      ]
+    },
+    {
+      "description": "A 60-second timeout override is passed to useIsCallerAdminWithTimeout in AdminDashboard, while the hook default is 45 seconds.",
+      "reason": "The build request does not specify a particular timeout value; the 60s override was added without explicit requirement.",
+      "evidence": [
+        "frontend/src/pages/AdminDashboard.tsx"
+      ]
+    }
+  ],
   "confidence": 0.72,
   "changed_files": [
     "frontend-file-summaries.txt",
+    "frontend/src/hooks/useIsCallerAdmin.ts",
     "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
     "frontend/src/pages/AdminDashboard.tsx",
     "project_state.json"

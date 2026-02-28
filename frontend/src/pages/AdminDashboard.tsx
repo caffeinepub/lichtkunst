@@ -69,7 +69,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // Waiting for actor to initialize (backend connection)
+  // Waiting for actor to initialize (backend connection) or actor not yet matching identity
   if (isLoading && actorWaiting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -77,7 +77,8 @@ export default function AdminDashboard() {
           <Wifi className="h-10 w-10 animate-pulse text-primary mx-auto" />
           <p className="text-foreground font-sans font-medium">Verbindung wird hergestellt…</p>
           <p className="text-muted-foreground font-sans text-xs">
-            Die Verbindung zum Internet Computer kann beim ersten Start einige Sekunden dauern.
+            Die Verbindung zum Internet Computer wird aufgebaut. Dies kann beim ersten Start einige
+            Sekunden dauern.
           </p>
           <div className="flex justify-center pt-2">
             <Button variant="outline" size="sm" onClick={retry} className="gap-2">
@@ -105,7 +106,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // Timed out — show retry, but don't block if it was just slow
+  // Timed out — show retry
   if (timedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

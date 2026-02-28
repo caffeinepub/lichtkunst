@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AdminCheckResult {
   isAdmin: boolean;
@@ -16,6 +17,7 @@ type Phase = 'idle' | 'waiting-actor' | 'checking-admin' | 'done' | 'timed-out' 
 export function useIsCallerAdminWithTimeout(timeoutMs = 45000): AdminCheckResult {
   const { actor, isFetching: actorFetching } = useActor();
   const { identity, isInitializing } = useInternetIdentity();
+  const queryClient = useQueryClient();
 
   const [phase, setPhase] = useState<Phase>('idle');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -45,6 +47,11 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 45000): AdminCheckResult
   const isAuthenticated = !!identity && !isAnonymous;
 
   const runKey = isAuthenticated && principalKey ? `${principalKey}:${retryCount}` : null;
+
+  // Check that the actor in the cache corresponds to the current identity
+  // This prevents calling isCallerAdmin() with a stale anonymous actor
+  const actorQueryData = queryClient.getQueryData<unknown>(['actor', principalKey]);
+  const actorMatchesIdentity = !!actorQueryData && actorQueryData === actor;
 
   const clearTimeout_ = useCallback(() => {
     if (timeoutRef.current) {
@@ -92,8 +99,10 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 45000): AdminCheckResult
       return;
     }
 
-    // Actor is still being fetched — show waiting state and arm timeout once
-    if (actorFetching || !actor) {
+    // Actor is still being fetched, not yet available, or doesn't match current identity yet
+    // We must wait until the actor for the CURRENT identity is ready to avoid calling
+    // isCallerAdmin() with a stale anonymous actor
+    if (actorFetching || !actor || !actorMatchesIdentity) {
       setPhase('waiting-actor');
 
       // Arm the overall timeout only if not already armed
@@ -108,7 +117,7 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 45000): AdminCheckResult
       return;
     }
 
-    // Actor is ready — start the admin check
+    // Actor is ready and matches current identity — start the admin check
     startedRef.current = runKey;
     setPhase('checking-admin');
     setError(null);
@@ -150,7 +159,7 @@ export function useIsCallerAdminWithTimeout(timeoutMs = 45000): AdminCheckResult
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actor, actorFetching, isAuthenticated, isInitializing, principalKey, runKey, timeoutMs]);
+  }, [actor, actorFetching, actorMatchesIdentity, isAuthenticated, isInitializing, principalKey, runKey, timeoutMs]);
 
   const retry = useCallback(() => {
     clearTimeout_();

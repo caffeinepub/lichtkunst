@@ -1,26 +1,34 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Web app project with an admin area that has a persistent backend connection timeout issue.",
+  "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "Admin area is inaccessible due to backend connection timeout ('Die Verbindung zum Backend hat zu lange gedauert')"
+    "Admin area returns 'Zugriff verweigert' / no admin rights error — likely missing ICP connection or permission configuration"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-the-admin-dashboard-access-failure-caused-by-backend-connection-timeout-the-useiscalleradminwithtimeout-hook-and-the-actor-initialization-in-useactor-ts-must-be-coordinated-so-that-the-admin-status-check-only-fires-after-the-authenticated-actor-is-fully-ready-eliminate-any-race-condition-between-internet-identity-login-completion-and-the-admin-check-query-being-enabled",
-      "title": "Fix the Admin Dashboard access failure caused by backend connection timeout. The `useIsCallerAdminWithTimeout` hook and the actor initialization in `useActor.ts` must be coordinated so that the admin status check only fires after the authenticated actor is fully ready. Eliminate any race condition between Internet Identity login completion and the admin check query being enabled.",
+      "id": "feature-fix-the-admin-dashboard-so-that-after-a-successful-internet-identity-login-the-admin-check-query-waits-for-the-authenticated-actor-to-be-fully-initialized-before-calling-iscalleradmin-on-the-backend-the-current-race-condition-causes-the-check-to-run-with-an-anonymous-identity-resulting-in-a-zugriff-verweigert-no-admin-rights-error-even-for-valid-admins",
+      "title": "Fix the Admin Dashboard so that after a successful Internet Identity login, the admin-check query waits for the authenticated actor to be fully initialized before calling `isCallerAdmin` on the backend. The current race condition causes the check to run with an anonymous identity, resulting in a 'Zugriff verweigert' / no admin rights error even for valid admins.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-ensure-the-backend-actor-in-useactor-ts-is-always-instantiated-using-the-authenticated-internet-identity-principal-when-the-user-is-logged-in-the-actor-must-not-fall-back-to-an-anonymous-identity-while-an-authenticated-identity-is-available-which-would-cause-admin-gated-backend-calls-to-fail-silently-or-time-out",
-      "title": "Ensure the backend actor in `useActor.ts` is always instantiated using the authenticated Internet Identity principal when the user is logged in. The actor must not fall back to an anonymous identity while an authenticated identity is available, which would cause admin-gated backend calls to fail silently or time out.",
+      "id": "feature-ensure-the-backend-actor-used-in-all-admin-operations-collections-nfts-etc-is-always-created-with-the-authenticated-internet-identity-principal-not-an-anonymous-identity-verify-that-useactor-re-initializes-the-actor-when-the-identity-changes-from-anonymous-to-authenticated",
+      "title": "Ensure the backend actor used in all admin operations (collections, NFTs, etc.) is always created with the authenticated Internet Identity principal, not an anonymous identity. Verify that `useActor` re-initializes the actor when the identity changes from anonymous to authenticated.",
       "reqIds": [
         "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-display-a-clear-loading-state-in-the-admin-dashboard-while-the-icp-actor-is-initializing-or-the-admin-check-is-pending-if-the-admin-check-definitively-fails-user-is-not-an-admin-show-a-clear-access-denied-message-in-english-do-not-show-the-access-denied-message-prematurely-during-the-initialization-phase",
+      "title": "Display a clear loading state in the Admin Dashboard while the ICP actor is initializing or the admin check is pending. If the admin check definitively fails (user is not an admin), show a clear 'Access Denied' message in English. Do not show the access-denied message prematurely during the initialization phase.",
+      "reqIds": [
+        "REQ-3"
       ],
       "version": 1
     }

@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the Admin Dashboard backend connection timeout caused by a race condition between Internet Identity login and the admin status check.
+**Goal:** Fix the Admin Dashboard authentication flow so that the ICP actor and admin check are properly sequenced after Internet Identity login, eliminating the race condition that causes false "Access Denied" errors.
 
 **Planned changes:**
-- Update `useIsCallerAdminWithTimeout` hook to only trigger the `isCallerAdmin` query after the authenticated actor is fully ready, eliminating the race condition with Internet Identity login
-- Ensure the backend actor always uses the authenticated identity when the user is logged in, never falling back to anonymous identity for admin-gated calls
-- Add a retry mechanism to the admin status check so at least one retry is attempted before showing a timeout error
-- Update `AdminDashboard.tsx` to coordinate actor readiness with the admin check, preventing the timeout error screen from appearing during normal authenticated login flow
+- Ensure `useIsCallerAdmin` / `useIsCallerAdminWithTimeout` defers the `isCallerAdmin` call until the authenticated actor from `useActor` is fully initialized (not anonymous)
+- Ensure `useActor` re-initializes the actor when the identity transitions from anonymous to authenticated, so all admin operations use the correct principal
+- Show a loading spinner while the actor is initializing or the admin check is pending
+- Show an "Access Denied" message only after the admin check has definitively completed and returned false (no premature flash for valid admins)
+- Clear React Query caches and reset actor to anonymous identity on logout
 
-**User-visible outcome:** After logging in via Internet Identity, the Admin Dashboard loads successfully without showing the "Die Verbindung zum Backend hat zu lange gedauert" timeout error message.
+**User-visible outcome:** A valid admin can log in with Internet Identity and immediately access the Admin Dashboard without seeing a false "Access Denied" error; a loading state is shown during initialization, and access is only denied when the check truly confirms the user is not an admin.

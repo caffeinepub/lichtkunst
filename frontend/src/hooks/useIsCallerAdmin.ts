@@ -1,16 +1,30 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
 
 export function useIsCallerAdmin() {
   const { actor, isFetching: actorFetching } = useActor();
   const { identity, isInitializing } = useInternetIdentity();
+  const queryClient = useQueryClient();
 
-  const isAuthenticated = !!identity;
-  const isReady = !!actor && !actorFetching && !isInitializing && isAuthenticated;
+  const principalKey = identity?.getPrincipal().toString() ?? null;
+  const isAnonymous = identity ? identity.getPrincipal().isAnonymous() : true;
+  const isAuthenticated = !!identity && !isAnonymous;
+
+  // Check that the actor in the cache corresponds to the current identity
+  // This prevents calling isCallerAdmin() with a stale anonymous actor
+  const actorQueryData = queryClient.getQueryData<unknown>(['actor', principalKey]);
+  const actorMatchesIdentity = !!actorQueryData && actorQueryData === actor;
+
+  const isReady =
+    !!actor &&
+    !actorFetching &&
+    !isInitializing &&
+    isAuthenticated &&
+    actorMatchesIdentity;
 
   const query = useQuery<boolean>({
-    queryKey: ['isCallerAdmin', identity?.getPrincipal().toString()],
+    queryKey: ['isCallerAdmin', principalKey],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
       return actor.isCallerAdmin();

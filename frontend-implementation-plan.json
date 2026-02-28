@@ -1,43 +1,64 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin Dashboard Backend Connection Timeout",
+  "title": "Fix admin authentication and ICP connection in Admin Dashboard",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Fix the Admin Dashboard access failure caused by backend connection timeout by coordinating the useIsCallerAdminWithTimeout hook with actor initialization to eliminate race conditions between Internet Identity login and admin status check",
+      "summary": "Fix admin check race condition by ensuring the authenticated actor is fully initialized before calling isCallerAdmin",
       "acceptanceCriteria": [
-        "After logging in via Internet Identity, the Admin Dashboard loads successfully without showing the timeout error message.",
-        "The admin status check (`isCallerAdmin`) is only initiated after the authenticated actor instance is confirmed ready.",
-        "If the backend call genuinely takes longer than expected, a retry mechanism attempts the request at least once before showing an error.",
-        "The timeout error screen ('Die Verbindung zum Backend hat zu lange gedauert') is not shown during normal authenticated admin login flow."
+        "After logging in with Internet Identity, the Admin Dashboard loads without showing 'Zugriff verweigert' for a principal that has admin rights.",
+        "The `isCallerAdmin` call in `useIsCallerAdmin` / `useIsCallerAdminWithTimeout` only fires after the authenticated actor (from `useActor`) is ready and reflects the logged-in identity.",
+        "If the actor is not yet initialized, the admin check is deferred (not run with anonymous identity).",
+        "The admin dashboard correctly shows the management UI once the admin check resolves to true."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
           "operation": "modify",
-          "description": "Modify the hook to wait for both authenticated identity AND a non-fetching actor state before enabling the admin check query. Add a multi-phase loading state that distinguishes between waiting for actor, checking admin status, and timeout phases. Implement automatic retry logic that attempts the admin check at least once before showing timeout error. Ensure the hook only returns isLoading=false after the actor is confirmed ready and the initial admin check attempt completes or fails."
+          "description": "Modify the useIsCallerAdmin hook to wait for the actor to be fully initialized and authenticated before enabling the admin check query. Add a dependency on the actor's isFetching state and ensure the query is only enabled when the actor is available and not in a loading state. This prevents the race condition where isCallerAdmin is called with an anonymous identity."
         },
         {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Update the AdminDashboard component to properly handle the new loading phases from useIsCallerAdminWithTimeout. Show a loading state while the actor is initializing and while the admin check is in progress. Only show the timeout error screen after all retry attempts have been exhausted. Ensure the component does not flash error messages during normal authentication flow by checking that both actor and identity are ready before rendering error states."
+          "description": "Update the useIsCallerAdminWithTimeout hook to properly detect when the actor is initializing versus when the admin check is running. Ensure the 'waitingForActor' phase accurately reflects the actor initialization state from useActor. Add proper handling to prevent the admin check from executing with an anonymous identity during the actor initialization window."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Ensure the backend actor in useActor.ts always uses the authenticated Internet Identity principal when logged in, preventing admin-gated backend calls from failing due to anonymous identity fallback",
+      "summary": "Verify actor re-initialization behavior when identity changes from anonymous to authenticated",
       "acceptanceCriteria": [
-        "When a user is authenticated via Internet Identity, all backend calls in the admin area use the authenticated actor, not the anonymous one.",
-        "The actor is re-created and queries are invalidated whenever the identity changes (login/logout).",
-        "No admin backend call is made with an anonymous principal."
+        "After login, the actor returned by `useActor` uses the authenticated identity.",
+        "Admin mutations (create/edit/delete collections and NFTs) do not receive authorization errors after a valid admin logs in.",
+        "Logging out resets the actor to an anonymous identity and clears relevant React Query caches."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
+          "operation": "modify",
+          "description": "Add a guard to ensure the isCallerAdmin query is invalidated and refetched when the actor changes from anonymous to authenticated. Use the identity object from useInternetIdentity as an additional dependency to detect identity transitions and trigger a fresh admin check with the new authenticated actor."
+        },
+        {
           "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Add validation that checks both identity existence AND that the identity is not anonymous before enabling the admin check query. Use identity.getPrincipal().isAnonymous() to verify the user is authenticated. This prevents race conditions where the hook might attempt an admin check with a stale anonymous actor while the authenticated actor is still being created. Include this check in the enabled condition alongside actor readiness and isFetching state."
+          "description": "Enhance the timeout logic to handle actor reinitialization during identity changes. Ensure that when the identity switches from anonymous to authenticated, the admin check restarts with the new actor rather than continuing with stale state. Add identity as a dependency to the effect hooks that manage the timeout phases."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Display clear loading and error states in the Admin Dashboard during actor initialization and admin checks",
+      "acceptanceCriteria": [
+        "A loading spinner or skeleton is shown while the actor is initializing or the admin check is in-flight.",
+        "The 'Access Denied' message only appears after the check has completed and confirmed the user is not an admin.",
+        "No flash of 'Access Denied' occurs for valid admins during the actor initialization delay."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Update the AdminDashboard component to distinguish between three states: (1) actor initializing, (2) admin check in progress, and (3) admin check completed with result. Show a loading spinner during states 1 and 2. Only display the 'Zugriff verweigert' / Access Denied message when the admin check has definitively completed (isLoaded is true) and the result is false. Use the phase information from useIsCallerAdminWithTimeout to provide more granular loading feedback (e.g., 'Initializing connection...', 'Checking admin rights...')."
         }
       ]
     }
