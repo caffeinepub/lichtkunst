@@ -1,45 +1,4 @@
 {
   "kind": "feature_evidence_report",
-  "features": [
-    {
-      "featureId": "feature-reduce-the-border-widths-on-the-gallery-page-further-they-must-be-noticeably-thinner-than-the-current-state-e-g-1px-or-0-5px-instead-of-the-current-value",
-      "featureTitle": "Reduce the border widths on the Gallery page further — they must be noticeably thinner than the current state (e.g. 1px or 0.5px instead of the current value).",
-      "files": [
-        "frontend/src/pages/Gallery.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-make-the-quote-text-on-the-gallery-page-lighter-in-font-weight-e-g-font-weight-300-or-400-and-switch-it-to-a-serif-typeface-use-the-already-loaded-playfair-display-font",
-      "featureTitle": "Make the quote text on the Gallery page lighter in font weight (e.g. font-weight: 300 or 400) and switch it to a serif typeface (use the already-loaded Playfair Display font).",
-      "files": [
-        "frontend/src/pages/Gallery.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    }
-  ]
+  "features": []
 }

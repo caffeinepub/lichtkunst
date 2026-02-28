@@ -73,7 +73,6 @@ import AccessControl "authorization/access-control";
     map.values().toArray();
   };
 
-  // User profile functions
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
@@ -95,7 +94,6 @@ import AccessControl "authorization/access-control";
     userProfiles.add(caller, profile);
   };
 
-  // NFT Query Functions - public read access, no auth required
   public query func getAllCollections() : async [NFTCollection] {
     mapToArray(collections);
   };
@@ -115,7 +113,6 @@ import AccessControl "authorization/access-control";
     nfts.get(id);
   };
 
-  // Admin-only: add a new collection
   public shared ({ caller }) func addCollection(id : Text, name : Text, description : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add collections");
@@ -129,7 +126,6 @@ import AccessControl "authorization/access-control";
     collections.add(id, collection);
   };
 
-  // Admin-only: update existing collection
   public shared ({ caller }) func updateCollection(id : Text, name : Text, description : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update collections");
@@ -148,7 +144,6 @@ import AccessControl "authorization/access-control";
     };
   };
 
-  // Admin-only: delete collection and associated NFTs
   public shared ({ caller }) func deleteCollection(id : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete collections");
@@ -172,7 +167,6 @@ import AccessControl "authorization/access-control";
     };
   };
 
-  // Allow users and admins to add NFTs
   public shared ({ caller }) func addNFT(
     id : Text,
     collectionId : Text,
@@ -199,7 +193,6 @@ import AccessControl "authorization/access-control";
     nfts.add(id, nft);
   };
 
-  // Upload image - authenticated users only
   public shared ({ caller }) func uploadImage(blob : Storage.ExternalBlob) : async Storage.ExternalBlob {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users or admins can upload images");
@@ -207,7 +200,6 @@ import AccessControl "authorization/access-control";
     blob;
   };
 
-  // Admin-only: update existing NFT
   public shared ({ caller }) func updateNFT(
     id : Text,
     collectionId : Text,
@@ -239,7 +231,6 @@ import AccessControl "authorization/access-control";
     };
   };
 
-  // Admin-only: delete NFT
   public shared ({ caller }) func deleteNFT(id : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete NFTs");
@@ -252,7 +243,6 @@ import AccessControl "authorization/access-control";
     };
   };
 
-  // NFT Minting - only authenticated users can mint NFTs
   public shared ({ caller }) func mintNFT(request : MintRequest) : async TokenId {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can mint NFTs");
@@ -287,12 +277,10 @@ import AccessControl "authorization/access-control";
     tokenId;
   };
 
-  // Public read: anyone can look up a specific issued NFT by token ID
   public query func getIssuedNFT(tokenId : TokenId) : async ?NFT {
     issuedNFTs.get(tokenId);
   };
 
-  // Only authenticated users can list their own NFTs
   public query ({ caller }) func listMyNFTs() : async [NFT] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can list their NFTs");
@@ -306,12 +294,10 @@ import AccessControl "authorization/access-control";
     };
   };
 
-  // Public read: anyone can list all issued NFTs
   public query func listAllNFTs() : async [NFT] {
     mapToArray(issuedNFTs);
   };
 
-  // Authenticated users can list NFTs by principal
   public query ({ caller }) func listNFTsByPrincipal(principal : Principal) : async [NFT] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Must be an authenticated user");
@@ -325,7 +311,6 @@ import AccessControl "authorization/access-control";
     };
   };
 
-  // Only authenticated users can count their own NFTs
   public query ({ caller }) func countMyNFTs() : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can count their NFTs");

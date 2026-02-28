@@ -1,30 +1,85 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [],
+  "summary": "Web3/NFT project with gallery/homepage UI, admin area, and NFT minting functionality. UI refinements and admin access issues are being addressed.",
+  "architectural_notes": [
+    "Project involves NFT minting functionality with a smart contract address that needs to be surfaced in the UI",
+    "Admin area access control is implemented but currently blocking access — needs investigation"
+  ],
+  "known_issues": [
+    "Admin area is denying access to the user despite being logged in",
+    "NFT contract address is not displayed in the UI"
+  ],
   "isFixRequest": true,
-  "existing_features": [
+  "existing_features": [],
+  "new_feature_requests": [
     {
-      "id": "feature-reduce-the-border-widths-on-the-gallery-page-further-they-must-be-noticeably-thinner-than-the-current-state-e-g-1px-or-0-5px-instead-of-the-current-value",
-      "title": "Reduce the border widths on the Gallery page further — they must be noticeably thinner than the current state (e.g. 1px or 0.5px instead of the current value).",
+      "id": "AR-1",
+      "summary": "Make borders/outlines half as thin (currently too thick)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Rename homepage label from 'Galerie' to 'Startseite'",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Remove 'Galerie' text from the banner",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Display NFT contract address visibly in the UI",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Reduce all border and outline widths throughout the UI to half their current thickness. Any border currently at 2px should become 1px, any at 1px should become 0.5px, and so on proportionally. Apply this consistently across cards, buttons, inputs, modals, and any other bordered elements.",
       "reqIds": [
         "REQ-1"
       ],
-      "version": 1
+      "status": "pending"
     },
     {
-      "id": "feature-make-the-quote-text-on-the-gallery-page-lighter-in-font-weight-e-g-font-weight-300-or-400-and-switch-it-to-a-serif-typeface-use-the-already-loaded-playfair-display-font",
-      "title": "Make the quote text on the Gallery page lighter in font weight (e.g. font-weight: 300 or 400) and switch it to a serif typeface (use the already-loaded Playfair Display font).",
+      "id": "AR-6",
+      "summary": "Rename the navigation label for the home/gallery route from 'Galerie' to 'Startseite' in the Navigation component and any other place this label appears in the UI (page titles, breadcrumbs, tab labels, etc.).",
       "reqIds": [
         "REQ-2"
       ],
-      "version": 1
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Remove the 'Galerie' text overlay/label rendered on top of the hero banner image on the Gallery/Startseite page. The banner should display only the image without this text.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Fix admin access control so that the authenticated admin user is correctly granted access to the Admin Dashboard. Investigate the useIsCallerAdminWithTimeout hook and AdminDashboard page: ensure the hardcoded principal fallback and timeout logic correctly match the logged-in user's principal. If the principal comparison is case-sensitive or formatted differently, normalize it. Add clear console logging or UI messaging so the current principal and the expected admin principal can be compared during debugging.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Display the NFT canister/contract address (principal ID of the backend canister) visibly in the UI. Show it in a prominent but non-intrusive location such as the footer, the NFT Gallery page header, or the NFT detail modal. Use the existing PrincipalDisplay component with copy-to-clipboard support. The label should read 'NFT Contract Address' or 'Canister Address'.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "status": "pending"
     }
   ],
-  "new_feature_requests": [],
-  "projectName": "Thinner borders and lighter serif quote font on Gallery page",
+  "gameProjectType": "none",
+  "projectName": "Istvan Seidel NFT Gallery",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

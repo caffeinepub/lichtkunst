@@ -1,36 +1,93 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Thinner borders and lighter serif quote font on Gallery page",
+  "title": "Thin borders, rename nav label, remove banner text, fix admin access, show NFT address",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Reduce border widths on the Gallery page to 1px or less",
+      "summary": "Reduce all border and outline widths throughout the UI to half their current thickness",
       "acceptanceCriteria": [
-        "All visible borders / outlines on the Gallery page are thinner than in the previous version",
-        "Border width is 1px or less"
+        "All visible borders and outlines appear visually half as thick as in version 59",
+        "No element retains its previous border width",
+        "Cards, inputs, modals, and buttons all reflect the thinner borders"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/Gallery.tsx",
+          "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Reduce all border widths in the Gallery page component to 1px or 0.5px. Specifically target any border or outline CSS classes (e.g., border-2, border-4) and replace them with border or border-[0.5px] for an ultra-thin appearance. Review all Card, section wrapper, and decorative border elements to ensure consistent thinning across the entire Gallery page."
+          "description": "Update global CSS custom properties and Tailwind utilities to reduce border widths by half. Change any 2px borders to 1px, 1px to 0.5px, and adjust border-related utility classes proportionally. This includes modifying border definitions in the base layer and component layer to ensure consistency across cards, buttons, inputs, modals, and other bordered elements."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Adjust the borderWidth theme configuration to define thinner default border widths (e.g., DEFAULT: '0.5px' instead of '1px'). Update any custom border width utilities to ensure all components using Tailwind border classes render with half the previous thickness."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Apply lighter serif font (Playfair Display) to quote text on Gallery page",
+      "summary": "Rename the navigation label for the home/gallery route from 'Galerie' to 'Startseite'",
       "acceptanceCriteria": [
-        "The quote text on the Gallery page uses Playfair Display (or another serif font) instead of a sans-serif font",
-        "The quote text has a lighter font weight (300 or 400) compared to the previous version",
-        "The change applies only to the quote element, not other Gallery text"
+        "The navigation link for the home/gallery page reads 'Startseite'",
+        "No other UI element labels this page 'Galerie' (except the NFT Gallery sub-page if it is a separate route)"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Navigation.tsx",
+          "operation": "modify",
+          "description": "Change the nav link label for the home/gallery route from 'Galerie' to 'Startseite'. Update the Link component text to display 'Startseite' while keeping the same route path. Ensure no other navigation elements continue to use 'Galerie' for the home page."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Remove the 'Galerie' text overlay from the hero banner on the Gallery/Startseite page",
+      "acceptanceCriteria": [
+        "The hero banner on the Gallery/Startseite page contains no 'Galerie' heading or text overlay",
+        "The banner image is otherwise unchanged"
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/Gallery.tsx",
           "operation": "modify",
-          "description": "Locate the quote text element in the Gallery page component and apply the Playfair Display serif font family (font-playfair) along with a lighter font weight (font-light for 300 or font-normal for 400). Ensure this styling change is scoped only to the quote text element and does not affect other text elements on the Gallery page. The Playfair Display font is already loaded in the project via Google Fonts."
+          "description": "Remove the 'Galerie' text heading or overlay that appears on top of the hero banner image. Keep the banner image display intact (using frontend/public/assets/generated/hero-light-art.dim_1920x1080.png) but eliminate any text elements that overlay the image. The banner should render as a pure image without text labels."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Fix admin access control so the authenticated admin user is correctly granted access to the Admin Dashboard",
+      "acceptanceCriteria": [
+        "The logged-in admin user is granted access to the Admin Dashboard without being denied",
+        "The admin check resolves correctly and does not time out for the legitimate admin user",
+        "Non-admin users are still correctly denied access"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+          "operation": "modify",
+          "description": "Debug and fix the admin check hook to correctly recognize the authenticated admin principal. Normalize principal comparison (ensure case-insensitivity or format matching), verify the hardcoded fallback principal matches the logged-in user's principal exactly, and add detailed console logging during each phase (initial, checking, timeout) to output both the current caller principal and the expected admin principal. Ensure the timeout logic does not prematurely deny access to legitimate admins."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Enhance the AdminDashboard page to display clear debugging information when access is denied. Show the current user's principal and the expected admin principal in the UI or console during the admin check phase. Add user-friendly error messaging that explains why access was denied (e.g., 'Principal mismatch' or 'Timeout during verification') to aid in troubleshooting."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Display the NFT canister/contract address in the UI using the PrincipalDisplay component",
+      "acceptanceCriteria": [
+        "The backend canister principal ID is visible somewhere in the UI (footer or NFT Gallery page)",
+        "The address can be copied to clipboard using the PrincipalDisplay component",
+        "The label clearly identifies this as the NFT contract/canister address"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Add the NFT canister/contract address display to the footer section. Use the PrincipalDisplay component to render the backend canister principal ID with copy-to-clipboard functionality. Label it as 'NFT Contract Address' or 'Canister Address' in German ('NFT-Vertragsadresse' or 'Canister-Adresse'). Position it prominently but non-intrusively in the footer alongside the existing backend status indicator."
         }
       ]
     }

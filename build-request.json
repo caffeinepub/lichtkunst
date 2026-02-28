@@ -1,52 +1,106 @@
 {
   "kind": "build_request",
-  "title": "Thinner borders and lighter serif quote font on Gallery page",
-  "priority": "normal",
+  "title": "Thin borders, rename nav label, remove banner text, fix admin access, show NFT address",
+  "projectName": "Istvan Seidel NFT Gallery",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Reduce the border widths on the Gallery page further — they must be noticeably thinner than the current state (e.g. 1px or 0.5px instead of the current value).",
+      "text": "Reduce all border and outline widths throughout the UI to half their current thickness. Any border currently at 2px should become 1px, any at 1px should become 0.5px, and so on proportionally. Apply this consistently across cards, buttons, inputs, modals, and any other bordered elements.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-user-1"
         ],
         "quotes": [
-          "die Umrandungen sind noch zu fett, mach sie dünner"
+          "Die Umrandungen sind noch zu fett, bitte um die Hälfte dünner!"
         ]
       },
       "acceptanceCriteria": [
-        "All visible borders / outlines on the Gallery page are thinner than in the previous version",
-        "Border width is 1px or less"
+        "All visible borders and outlines appear visually half as thick as in version 59",
+        "No element retains its previous border width",
+        "Cards, inputs, modals, and buttons all reflect the thinner borders"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Make the quote text on the Gallery page lighter in font weight (e.g. font-weight: 300 or 400) and switch it to a serif typeface (use the already-loaded Playfair Display font).",
+      "text": "Rename the navigation label for the home/gallery route from 'Galerie' to 'Startseite' in the Navigation component and any other place this label appears in the UI (page titles, breadcrumbs, tab labels, etc.).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-user-1"
         ],
         "quotes": [
-          "die Schrift des Zitates ist zu fett, also dünner und ich will eine Serifenschrift"
+          "Die Startseite soll nicht 'Galerie' heissen, sondern 'Startseite'"
         ]
       },
       "acceptanceCriteria": [
-        "The quote text on the Gallery page uses Playfair Display (or another serif font) instead of a sans-serif font",
-        "The quote text has a lighter font weight (300 or 400) compared to the previous version",
-        "The change applies only to the quote element, not other Gallery text"
+        "The navigation link for the home/gallery page reads 'Startseite'",
+        "No other UI element labels this page 'Galerie' (except the NFT Gallery sub-page if it is a separate route)"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Remove the 'Galerie' text overlay/label rendered on top of the hero banner image on the Gallery/Startseite page. The banner should display only the image without this text.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-1"
+        ],
+        "quotes": [
+          "'Galerie' Schrift nicht auf den Banner"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The hero banner on the Gallery/Startseite page contains no 'Galerie' heading or text overlay",
+        "The banner image is otherwise unchanged"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Fix admin access control so that the authenticated admin user is correctly granted access to the Admin Dashboard. Investigate the useIsCallerAdminWithTimeout hook and AdminDashboard page: ensure the hardcoded principal fallback and timeout logic correctly match the logged-in user's principal. If the principal comparison is case-sensitive or formatted differently, normalize it. Add clear console logging or UI messaging so the current principal and the expected admin principal can be compared during debugging.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-user-1"
+        ],
+        "quotes": [
+          "Admin Bereich verweigert weiterhin den Zugriff"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The logged-in admin user is granted access to the Admin Dashboard without being denied",
+        "The admin check resolves correctly and does not time out for the legitimate admin user",
+        "Non-admin users are still correctly denied access"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Display the NFT canister/contract address (principal ID of the backend canister) visibly in the UI. Show it in a prominent but non-intrusive location such as the footer, the NFT Gallery page header, or the NFT detail modal. Use the existing PrincipalDisplay component with copy-to-clipboard support. The label should read 'NFT Contract Address' or 'Canister Address'.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-1"
+        ],
+        "quotes": [
+          "Wo ist die Adresse des NFT?"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The backend canister principal ID is visible somewhere in the UI (footer or NFT Gallery page)",
+        "The address can be copied to clipboard using the PrincipalDisplay component",
+        "The label clearly identifies this as the NFT contract/canister address"
       ]
     }
   ],
   "constraints": [
-    "Do not alter any immutable frontend paths (hooks, main.tsx, ui components)",
-    "Only modify the Gallery page and its directly related styles — do not affect other pages"
+    "Do not change the backend data model or NFT minting logic",
+    "Do not modify immutable frontend paths: useInternetIdentity.ts, useActor.ts, main.tsx, components/ui"
   ],
   "nonGoals": [
-    "Changing typography or borders on pages other than Gallery",
-    "Redesigning the overall Gallery layout",
-    "Adding new features or content sections"
+    "Redesigning the overall visual theme or color palette",
+    "Adding new NFT features or minting flows",
+    "Changing the NFT Gallery sub-page route or its functionality"
   ],
   "imageRequirements": {
     "required": [],
