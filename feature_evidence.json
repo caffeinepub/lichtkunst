@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-admin-dashboard-so-that-after-a-successful-internet-identity-login-the-admin-check-query-waits-for-the-authenticated-actor-to-be-fully-initialized-before-calling-iscalleradmin-on-the-backend-the-current-race-condition-causes-the-check-to-run-with-an-anonymous-identity-resulting-in-a-zugriff-verweigert-no-admin-rights-error-even-for-valid-admins",
-      "featureTitle": "Fix the Admin Dashboard so that after a successful Internet Identity login, the admin-check query waits for the authenticated actor to be fully initialized before calling `isCallerAdmin` on the backend. The current race condition causes the check to run with an anonymous identity, resulting in a 'Zugriff verweigert' / no admin rights error even for valid admins.",
+      "featureId": "feature-diagnose-and-fix-the-root-cause-of-the-admin-button-appearing-permanently-grey-and-spinning-indefinitely-on-the-live-production-site-the-issue-originates-in-the-admin-role-detection-logic-useiscalleradmin-useiscalleradminwithtimeout-hooks-and-or-the-actor-connection-setup-useactor-the-fix-must-ensure-that-a-the-actor-is-fully-initialised-before-the-admin-check-is-attempted-b-any-failed-or-stalled-actor-connection-is-detected-and-surfaced-rather-than-silently-hanging-and-c-the-admin-check-resolves-to-a-definitive-result-admin-not-admin-error-within-a-reasonable-timeout-instead-of-remaining-in-a-perpetual-loading-state",
+      "featureTitle": "Diagnose and fix the root cause of the Admin button appearing permanently grey and spinning indefinitely on the live production site. The issue originates in the admin role detection logic (useIsCallerAdmin / useIsCallerAdminWithTimeout hooks) and/or the actor connection setup (useActor). The fix must ensure that: (a) the actor is fully initialised before the admin check is attempted, (b) any failed or stalled actor connection is detected and surfaced rather than silently hanging, and (c) the admin check resolves to a definitive result (admin / not-admin / error) within a reasonable timeout instead of remaining in a perpetual loading state.",
       "files": [
-        "frontend/src/hooks/useIsCallerAdmin.ts",
+        "frontend/src/hooks/useActorReady.ts",
         "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
       ],
       "components": [
@@ -23,8 +23,8 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-backend-actor-used-in-all-admin-operations-collections-nfts-etc-is-always-created-with-the-authenticated-internet-identity-principal-not-an-anonymous-identity-verify-that-useactor-re-initializes-the-actor-when-the-identity-changes-from-anonymous-to-authenticated",
-      "featureTitle": "Ensure the backend actor used in all admin operations (collections, NFTs, etc.) is always created with the authenticated Internet Identity principal, not an anonymous identity. Verify that `useActor` re-initializes the actor when the identity changes from anonymous to authenticated.",
+      "featureId": "feature-harden-the-actor-initialisation-in-useactor-so-that-connection-failures-are-caught-and-exposed-via-a-stable-error-state-rather-than-leaving-dependent-hooks-in-a-perpetual-loading-loop-add-a-maximum-wait-threshold-so-that-hooks-that-depend-on-the-actor-such-as-admin-role-checks-can-detect-an-unavailable-actor-and-exit-gracefully",
+      "featureTitle": "Harden the actor initialisation in useActor so that connection failures are caught and exposed via a stable error state rather than leaving dependent hooks in a perpetual loading loop. Add a maximum wait threshold so that hooks that depend on the actor (such as admin role checks) can detect an unavailable actor and exit gracefully.",
       "files": [
         "frontend/src/hooks/useIsCallerAdmin.ts",
         "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
@@ -44,10 +44,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-display-a-clear-loading-state-in-the-admin-dashboard-while-the-icp-actor-is-initializing-or-the-admin-check-is-pending-if-the-admin-check-definitively-fails-user-is-not-an-admin-show-a-clear-access-denied-message-in-english-do-not-show-the-access-denied-message-prematurely-during-the-initialization-phase",
-      "featureTitle": "Display a clear loading state in the Admin Dashboard while the ICP actor is initializing or the admin check is pending. If the admin check definitively fails (user is not an admin), show a clear 'Access Denied' message in English. Do not show the access-denied message prematurely during the initialization phase.",
+      "featureId": "feature-update-the-navigation-component-to-handle-the-timed-out-and-error-states-returned-by-useiscalleradminwithtimeout-when-a-timeout-or-connection-error-occurs-hide-the-admin-button-entirely-rather-than-showing-it-in-a-perpetual-grey-loading-state-and-optionally-display-a-subtle-retry-trigger",
+      "featureTitle": "Update the Navigation component to handle the timed-out and error states returned by useIsCallerAdminWithTimeout: when a timeout or connection error occurs, hide the Admin button entirely (rather than showing it in a perpetual grey/loading state) and optionally display a subtle retry trigger.",
       "files": [
-        "frontend/src/pages/AdminDashboard.tsx"
+        "frontend/src/components/Navigation.tsx",
+        "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
       ],
       "components": [
         "authorization@4.0.0",

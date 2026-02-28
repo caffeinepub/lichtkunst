@@ -1,27 +1,32 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
+import { useActorReady } from './useActorReady';
+
+const ADMIN_CHECK_TIMEOUT_MS = 15_000; // 15 seconds max wait
 
 export function useIsCallerAdmin() {
   const { actor, isFetching: actorFetching } = useActor();
   const { identity, isInitializing } = useInternetIdentity();
   const queryClient = useQueryClient();
+  const { isActorReady, actorError } = useActorReady();
 
-  const principalKey = identity?.getPrincipal().toString() ?? null;
+  const principalKey = identity?.getPrincipal().toString() ?? undefined;
   const isAnonymous = identity ? identity.getPrincipal().isAnonymous() : true;
   const isAuthenticated = !!identity && !isAnonymous;
 
-  // Check that the actor in the cache corresponds to the current identity
-  // This prevents calling isCallerAdmin() with a stale anonymous actor
-  const actorQueryData = queryClient.getQueryData<unknown>(['actor', principalKey]);
-  const actorMatchesIdentity = !!actorQueryData && actorQueryData === actor;
+  // Check that the actor query for the current identity is in a 'success' state.
+  const actorQueryState = queryClient.getQueryState(['actor', principalKey]);
+  const actorMatchesIdentity =
+    isActorReady || (actorQueryState?.status === 'success' && !!actor && !actorFetching);
 
   const isReady =
     !!actor &&
     !actorFetching &&
     !isInitializing &&
     isAuthenticated &&
-    actorMatchesIdentity;
+    actorMatchesIdentity &&
+    !actorError;
 
   const query = useQuery<boolean>({
     queryKey: ['isCallerAdmin', principalKey],
@@ -30,13 +35,30 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: isReady,
-    retry: false,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
     staleTime: 30_000,
+    // Timeout the query itself after ADMIN_CHECK_TIMEOUT_MS
+    gcTime: ADMIN_CHECK_TIMEOUT_MS,
   });
+
+  // isLoading is true while:
+  // - identity is still initializing
+  // - actor is still being fetched
+  // - user is authenticated but the query hasn't completed yet
+  // But NOT if there's an actor error (we should stop loading in that case)
+  const isLoading =
+    !actorError &&
+    (isInitializing ||
+      actorFetching ||
+      (isAuthenticated && !actorMatchesIdentity) ||
+      (isAuthenticated && actorMatchesIdentity && query.isLoading));
 
   return {
     ...query,
-    isLoading: isInitializing || actorFetching || (isAuthenticated && query.isLoading),
+    isLoading,
     isFetched: isReady && query.isFetched,
+    isError: query.isError || !!actorError,
+    error: query.error || actorError,
   };
 }

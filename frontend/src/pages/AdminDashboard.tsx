@@ -14,9 +14,9 @@ import type { NFTItem } from '../backend';
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { identity, isInitializing, login } = useInternetIdentity();
-  // Use a generous timeout (60s) to handle cold-start IC canister delays
+  // Use a generous timeout (90s) to handle cold-start IC canister delays
   const { isAdmin, isLoading, timedOut, error, retry, actorWaiting } =
-    useIsCallerAdminWithTimeout(60000);
+    useIsCallerAdminWithTimeout(90000);
 
   const [editingNFT, setEditingNFT] = useState<NFTItem | null>(null);
   const [showNFTForm, setShowNFTForm] = useState(false);

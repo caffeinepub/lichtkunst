@@ -1,64 +1,69 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix admin authentication and ICP connection in Admin Dashboard",
+  "title": "Fix Admin button infinite loading / connection failure on live site",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Fix admin check race condition by ensuring the authenticated actor is fully initialized before calling isCallerAdmin",
+      "summary": "Diagnose and fix the root cause of the Admin button infinite loading state by ensuring the admin role detection logic resolves to a definitive result (admin / not-admin / error) within a reasonable timeout instead of remaining in a perpetual loading state",
       "acceptanceCriteria": [
-        "After logging in with Internet Identity, the Admin Dashboard loads without showing 'Zugriff verweigert' for a principal that has admin rights.",
-        "The `isCallerAdmin` call in `useIsCallerAdmin` / `useIsCallerAdminWithTimeout` only fires after the authenticated actor (from `useActor`) is ready and reflects the logged-in identity.",
-        "If the actor is not yet initialized, the admin check is deferred (not run with anonymous identity).",
-        "The admin dashboard correctly shows the management UI once the admin check resolves to true."
+        "On the live production site, the Admin button becomes clickable (not grey/disabled) within a few seconds after login for a user with admin privileges.",
+        "If the actor connection cannot be established within the timeout window, the Admin button displays a clear error or disabled state with a retry affordance instead of spinning indefinitely.",
+        "The useIsCallerAdminWithTimeout hook always transitions out of its loading phase — it must reach one of: done, timed-out, or error — and never remain stuck in waiting-actor or checking-admin indefinitely.",
+        "The fix is verified on the deployed (production) canister, not only in local development."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
-          "operation": "modify",
-          "description": "Modify the useIsCallerAdmin hook to wait for the actor to be fully initialized and authenticated before enabling the admin check query. Add a dependency on the actor's isFetching state and ensure the query is only enabled when the actor is available and not in a loading state. This prevents the race condition where isCallerAdmin is called with an anonymous identity."
-        },
-        {
           "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Update the useIsCallerAdminWithTimeout hook to properly detect when the actor is initializing versus when the admin check is running. Ensure the 'waitingForActor' phase accurately reflects the actor initialization state from useActor. Add proper handling to prevent the admin check from executing with an anonymous identity during the actor initialization window."
+          "description": "Add explicit timeout handling in both the waiting-actor and checking-admin phases. Ensure that if the actor doesn't become ready within the configured timeout window, the hook transitions to the timed-out phase. Add a maximum duration guard that forces a transition to timed-out if the total elapsed time exceeds the timeout regardless of phase. Add error catching for the isCallerAdmin query to transition to the error phase on query failures. Ensure the cleanup function cancels any pending timers to prevent state updates after unmount."
+        },
+        {
+          "path": "frontend/src/hooks/useActorReady.ts",
+          "operation": "create",
+          "description": "Create a new lightweight wrapper hook around useActor that exposes a boolean isActorReady flag and an actorError state. This hook should return true for isActorReady only when the actor is fully initialized and matches the current identity. If the actor initialization takes longer than a configurable threshold (e.g., 10 seconds), set actorError to indicate a connection failure. This allows dependent hooks like useIsCallerAdminWithTimeout to detect stalled actor connections without modifying the immutable useActor.ts."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Verify actor re-initialization behavior when identity changes from anonymous to authenticated",
+      "summary": "Harden the actor initialisation by exposing connection failures via a stable error state and adding a maximum wait threshold so dependent hooks can detect an unavailable actor and exit gracefully",
       "acceptanceCriteria": [
-        "After login, the actor returned by `useActor` uses the authenticated identity.",
-        "Admin mutations (create/edit/delete collections and NFTs) do not receive authorization errors after a valid admin logs in.",
-        "Logging out resets the actor to an anonymous identity and clears relevant React Query caches."
+        "useActor exposes an isError / error state when the actor cannot be created within the timeout.",
+        "Hooks that gate on actor readiness (useIsCallerAdmin, useIsCallerAdminWithTimeout) react to the actor error state by transitioning to their own error state instead of staying in loading.",
+        "No regression: anonymous (unauthenticated) users still see the navigation without the Admin button."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
-          "operation": "modify",
-          "description": "Add a guard to ensure the isCallerAdmin query is invalidated and refetched when the actor changes from anonymous to authenticated. Use the identity object from useInternetIdentity as an additional dependency to detect identity transitions and trigger a fresh admin check with the new authenticated actor."
-        },
-        {
           "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Enhance the timeout logic to handle actor reinitialization during identity changes. Ensure that when the identity switches from anonymous to authenticated, the admin check restarts with the new actor rather than continuing with stale state. Add identity as a dependency to the effect hooks that manage the timeout phases."
+          "description": "Integrate the new useActorReady hook. In the waiting-actor phase, check for actorError from useActorReady and transition to the error phase if the actor connection has failed. Replace the current actor-readiness check with the isActorReady flag from useActorReady to ensure the hook only proceeds to checking-admin when the actor is confirmed ready. Add a totalElapsedTime tracker that starts when the hook mounts and forces a transition to timed-out if the total time exceeds the timeout threshold, even if individual phase transitions are delayed."
+        },
+        {
+          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
+          "operation": "modify",
+          "description": "Add integration with useActorReady to detect actor connection errors. If actorError is set, immediately return isAdmin: false and isLoading: false with an error flag. Ensure the query is only enabled when isActorReady is true (not just when actor is truthy). Add a timeout mechanism so that if the actor doesn't become ready within 10 seconds, the hook stops waiting and returns an error state. This prevents the hook from staying in a loading state indefinitely when the actor initialization stalls."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Display clear loading and error states in the Admin Dashboard during actor initialization and admin checks",
+      "summary": "Update the Navigation component to handle the timed-out and error states from useIsCallerAdminWithTimeout by hiding the Admin button when a timeout or connection error occurs, and optionally displaying a subtle retry trigger",
       "acceptanceCriteria": [
-        "A loading spinner or skeleton is shown while the actor is initializing or the admin check is in-flight.",
-        "The 'Access Denied' message only appears after the check has completed and confirmed the user is not an admin.",
-        "No flash of 'Access Denied' occurs for valid admins during the actor initialization delay."
+        "When useIsCallerAdminWithTimeout reaches the timed-out or error phase, the Admin button is hidden from the navigation bar.",
+        "A lightweight retry mechanism (e.g., a small icon button or re-checking on next user interaction) is available so the admin can attempt to reconnect without a full page reload.",
+        "The loading spinner/grey state is only shown during the bounded waiting period, not indefinitely."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "path": "frontend/src/components/Navigation.tsx",
           "operation": "modify",
-          "description": "Update the AdminDashboard component to distinguish between three states: (1) actor initializing, (2) admin check in progress, and (3) admin check completed with result. Show a loading spinner during states 1 and 2. Only display the 'Zugriff verweigert' / Access Denied message when the admin check has definitively completed (isLoaded is true) and the result is false. Use the phase information from useIsCallerAdminWithTimeout to provide more granular loading feedback (e.g., 'Initializing connection...', 'Checking admin rights...')."
+          "description": "Update the Navigation component to destructure the phase, isAdmin, and retry function from useIsCallerAdminWithTimeout. Hide the Admin button entirely when phase is 'timed-out' or 'error'. Show the Admin button with a loading/disabled state only when phase is 'waiting-actor' or 'checking-admin'. When phase is 'done', show the Admin button as enabled if isAdmin is true, or hide it if isAdmin is false. Add a small retry icon button (e.g., using Lucide's RefreshCw icon) that appears near the navigation when phase is 'timed-out' or 'error', which calls the retry function when clicked. Ensure the retry button is visually subtle (e.g., small, opacity-reduced) so it doesn't clutter the navigation bar."
+        },
+        {
+          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+          "operation": "modify",
+          "description": "Add a retry function to the return value of useIsCallerAdminWithTimeout. The retry function should reset the phase to 'idle', clear any previous error or timeout state, and restart the admin check from scratch. This allows the Navigation component to offer a manual retry mechanism without requiring a full page reload. Ensure that calling retry while a check is in progress cancels the current check and starts a new one."
         }
       ]
     }
