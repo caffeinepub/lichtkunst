@@ -1,216 +1,135 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import { useQueryClient } from '@tanstack/react-query';
-import { useActorReady } from './useActorReady';
 
-interface AdminCheckResult {
+export type AdminCheckPhase =
+  | 'initializing'
+  | 'waiting-for-actor'
+  | 'checking'
+  | 'success'
+  | 'not-admin'
+  | 'error'
+  | 'timed-out';
+
+export interface AdminCheckResult {
+  phase: AdminCheckPhase;
   isAdmin: boolean;
-  isLoading: boolean;
-  timedOut: boolean;
-  error: Error | null;
   retry: () => void;
-  actorWaiting: boolean;
-  phase: Phase;
 }
 
-type Phase = 'idle' | 'waiting-actor' | 'checking-admin' | 'done' | 'timed-out' | 'error';
+/**
+ * TEMPORARY FALLBACK: Hardcoded admin principal.
+ * If the backend isCallerAdmin() call fails or is slow, this principal
+ * will always be treated as admin. Replace with your actual principal ID.
+ * To find your principal: log in and check identity.getPrincipal().toString()
+ */
+const HARDCODED_ADMIN_PRINCIPAL = ''; // TODO: Fill in your principal ID here
 
-export function useIsCallerAdminWithTimeout(timeoutMs = 60000): AdminCheckResult {
+/**
+ * Admin check hook with timeout and phase state machine.
+ * Uses a simple imperative approach to avoid React Query race conditions.
+ * Includes a hardcoded principal fallback to prevent flash/disappear issues.
+ */
+export function useIsCallerAdminWithTimeout(timeoutMs = 30000): AdminCheckResult {
   const { actor, isFetching: actorFetching } = useActor();
   const { identity, isInitializing } = useInternetIdentity();
-  const queryClient = useQueryClient();
-  const { isActorReady, actorError } = useActorReady();
 
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [phase, setPhase] = useState<AdminCheckPhase>('initializing');
   const [retryCount, setRetryCount] = useState(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const mountedRef = useRef(true);
-  const phaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const maxTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Track which (principalKey, retryCount) pair we've already started or resolved
-  const startedRef = useRef<string | null>(null);
-  const resolvedRef = useRef<string | null>(null);
+  const isAuthenticated = !!identity;
+  const isActorReady = !!actor && !actorFetching && !isInitializing;
 
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (phaseTimeoutRef.current) {
-        clearTimeout(phaseTimeoutRef.current);
-        phaseTimeoutRef.current = null;
-      }
-      if (maxTimeoutRef.current) {
-        clearTimeout(maxTimeoutRef.current);
-        maxTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  const principalKey = identity?.getPrincipal().toString() ?? undefined;
-  // Only treat as authenticated if principal is not anonymous
-  const isAnonymous = identity ? identity.getPrincipal().isAnonymous() : true;
-  const isAuthenticated = !!identity && !isAnonymous;
-
-  const runKey = isAuthenticated && principalKey ? `${principalKey}:${retryCount}` : null;
-
-  // Check that the actor query for the current identity is in a 'success' state.
-  const actorQueryState = queryClient.getQueryState(['actor', principalKey]);
-  const actorMatchesIdentity =
-    isActorReady || (actorQueryState?.status === 'success' && !!actor && !actorFetching);
-
-  const clearAllTimeouts = useCallback(() => {
-    if (phaseTimeoutRef.current) {
-      clearTimeout(phaseTimeoutRef.current);
-      phaseTimeoutRef.current = null;
-    }
-    if (maxTimeoutRef.current) {
-      clearTimeout(maxTimeoutRef.current);
-      maxTimeoutRef.current = null;
-    }
-  }, []);
+  // Check if current user matches the hardcoded admin principal fallback
+  const currentPrincipal = identity?.getPrincipal().toString() ?? '';
+  const isHardcodedAdmin =
+    HARDCODED_ADMIN_PRINCIPAL.length > 0 && currentPrincipal === HARDCODED_ADMIN_PRINCIPAL;
 
   useEffect(() => {
-    // Still initializing identity — wait silently
+    // Clear any previous abort/timeout
+    if (abortRef.current) abortRef.current.abort();
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    const abort = new AbortController();
+    abortRef.current = abort;
+
+    // If not authenticated, we can't be admin
+    if (!isInitializing && !isAuthenticated) {
+      setPhase('not-admin');
+      return;
+    }
+
+    // If the hardcoded principal matches, immediately grant admin — no backend call needed
+    if (isHardcodedAdmin && !isInitializing) {
+      setPhase('success');
+      return;
+    }
+
+    // Still initializing identity
     if (isInitializing) {
-      setPhase('idle');
-      return;
+      setPhase('initializing');
     }
 
-    // Not authenticated — resolve immediately as non-admin
-    if (!isAuthenticated || !principalKey || !runKey) {
-      clearAllTimeouts();
-      startedRef.current = null;
-      resolvedRef.current = null;
-      setIsAdmin(false);
-      setError(null);
-      setPhase('done');
-      return;
-    }
-
-    // runKey changed (new login or retry) — reset everything
-    if (startedRef.current !== null && startedRef.current !== runKey) {
-      clearAllTimeouts();
-      startedRef.current = null;
-      resolvedRef.current = null;
-      setIsAdmin(false);
-      setError(null);
-      setPhase('idle');
-      // Don't return — fall through to start the new check
-    }
-
-    // Already resolved for this exact key — nothing to do
-    if (resolvedRef.current === runKey) {
-      return;
-    }
-
-    // Already started for this key — don't re-trigger
-    if (startedRef.current === runKey) {
-      // But check if actor error arrived after we started waiting
-      if (actorError && phase === 'waiting-actor') {
-        clearAllTimeouts();
-        setError(actorError);
-        setPhase('error');
+    // Actor not ready yet
+    if (!isActorReady) {
+      if (!isInitializing) {
+        setPhase('waiting-for-actor');
       }
-      return;
-    }
 
-    // Actor connection failed — transition to error immediately
-    if (actorError) {
-      clearAllTimeouts();
-      startedRef.current = runKey;
-      resolvedRef.current = runKey;
-      setError(actorError);
-      setIsAdmin(false);
-      setPhase('error');
-      return;
-    }
-
-    // Actor is still being fetched, not yet available, or doesn't match current identity yet.
-    if (actorFetching || !actor || !actorMatchesIdentity) {
-      setPhase('waiting-actor');
-
-      // Arm the overall timeout only if not already armed
-      if (!phaseTimeoutRef.current && !maxTimeoutRef.current) {
-        phaseTimeoutRef.current = setTimeout(() => {
-          phaseTimeoutRef.current = null;
-          if (mountedRef.current && resolvedRef.current !== runKey) {
-            setPhase('timed-out');
-          }
-        }, timeoutMs);
-      }
-      return;
-    }
-
-    // Actor is ready and matches current identity — start the admin check
-    startedRef.current = runKey;
-    setPhase('checking-admin');
-    setError(null);
-
-    // Arm timeout if not already armed
-    if (!phaseTimeoutRef.current && !maxTimeoutRef.current) {
-      phaseTimeoutRef.current = setTimeout(() => {
-        phaseTimeoutRef.current = null;
-        if (mountedRef.current && resolvedRef.current !== runKey) {
+      // Set a timeout for actor readiness
+      timeoutRef.current = setTimeout(() => {
+        if (!abort.signal.aborted) {
           setPhase('timed-out');
         }
       }, timeoutMs);
+
+      return () => {
+        abort.abort();
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      };
     }
 
-    // Hard maximum guard: force timed-out after 2x timeoutMs regardless of phase
-    if (!maxTimeoutRef.current) {
-      maxTimeoutRef.current = setTimeout(() => {
-        maxTimeoutRef.current = null;
-        if (mountedRef.current && resolvedRef.current !== runKey) {
-          setPhase('timed-out');
-        }
-      }, timeoutMs * 2);
-    }
+    // Actor is ready — perform the check
+    setPhase('checking');
 
-    let cancelled = false;
-    const capturedRunKey = runKey;
-    const capturedActor = actor;
+    // Set overall timeout
+    timeoutRef.current = setTimeout(() => {
+      if (!abort.signal.aborted) {
+        abort.abort();
+        setPhase('timed-out');
+      }
+    }, timeoutMs);
 
-    capturedActor
-      .isCallerAdmin()
-      .then((result) => {
-        if (cancelled || !mountedRef.current) return;
-        clearAllTimeouts();
-        resolvedRef.current = capturedRunKey;
-        setIsAdmin(result);
-        setError(null);
-        setPhase('done');
-      })
-      .catch((err) => {
-        if (cancelled || !mountedRef.current) return;
-        clearAllTimeouts();
-        // Don't mark as resolved so retry can work
-        setError(err instanceof Error ? err : new Error(String(err)));
-        setIsAdmin(false);
+    (async () => {
+      try {
+        const result = await actor.isCallerAdmin();
+        if (abort.signal.aborted) return;
+        clearTimeout(timeoutRef.current!);
+        setPhase(result ? 'success' : 'not-admin');
+      } catch (err) {
+        if (abort.signal.aborted) return;
+        clearTimeout(timeoutRef.current!);
+        console.error('isCallerAdmin failed:', err);
         setPhase('error');
-      });
+      }
+    })();
 
     return () => {
-      cancelled = true;
+      abort.abort();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actor, actorFetching, actorMatchesIdentity, actorError, isActorReady, isAuthenticated, isInitializing, principalKey, runKey, timeoutMs]);
+  }, [isActorReady, isAuthenticated, isInitializing, isHardcodedAdmin, retryCount, timeoutMs]);
 
-  const retry = useCallback(() => {
-    clearAllTimeouts();
-    startedRef.current = null;
-    resolvedRef.current = null;
-    setIsAdmin(false);
-    setError(null);
-    setPhase('idle');
+  const retry = () => {
+    setPhase('initializing');
     setRetryCount((c) => c + 1);
-  }, [clearAllTimeouts]);
+  };
 
-  const isLoading = phase === 'idle' || phase === 'waiting-actor' || phase === 'checking-admin';
-  const timedOut = phase === 'timed-out';
-  const actorWaiting = phase === 'waiting-actor';
-
-  return { isAdmin, isLoading, timedOut, error, retry, actorWaiting, phase };
+  return {
+    phase,
+    isAdmin: phase === 'success',
+    retry,
+  };
 }

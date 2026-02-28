@@ -1,13 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the Admin button on the live production site that gets stuck in a perpetual grey/loading state due to actor connection failures or stalled admin role detection.
+**Goal:** Fix the admin button flashing and disappearing behavior in the Navigation component on the live canister.
 
 **Planned changes:**
-- Harden the `useActor` hook (via a wrapper or utility module) to expose an `isError`/`error` state and a maximum wait threshold when the actor cannot be initialised in time
-- Update `useIsCallerAdminWithTimeout` (and/or `useIsCallerAdmin`) so it always resolves to a definitive state — `done`, `timed-out`, or `error` — instead of remaining stuck in a loading phase
-- Ensure dependent hooks react to an actor error state by transitioning to their own error state rather than staying in loading
-- Update the Navigation component to hide the Admin button when a timeout or connection error occurs, and provide a lightweight retry mechanism so the admin can attempt to reconnect without a full page reload
-- Ensure the loading/grey spinner is only shown during the bounded waiting period
+- Add a hardcoded principal fallback in the Navigation component so the known admin principal always sees the Admin link, even if the backend `isCallerAdmin` call is slow or fails
+- Update `useIsCallerAdmin.ts` and/or `useIsCallerAdminWithTimeout.ts` to hold the admin UI in an indeterminate/loading state during the backend call, only hiding the Admin button after a definitive `false` response or timeout
+- Verify that the `isCallerAdmin` method in `backend/main.mo` is public and correctly returns `true` for the admin principal on the live canister
 
-**User-visible outcome:** On the live site, the Admin button either becomes clickable within a few seconds for admin users, or is hidden cleanly with a retry option if the connection cannot be established — it will no longer spin indefinitely.
+**User-visible outcome:** The Admin navigation link no longer flashes or disappears on page load for the admin user; it remains visible while authentication is resolved and only hides for non-admin users after a confirmed response.

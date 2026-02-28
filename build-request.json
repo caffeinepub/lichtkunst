@@ -1,73 +1,75 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin button infinite loading / connection failure on live site",
+  "title": "Fix Admin Button Flash/Disappear on Live",
+  "projectName": "Istvan Seidel NFT Portfolio",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Diagnose and fix the root cause of the Admin button appearing permanently grey and spinning indefinitely on the live production site. The issue originates in the admin role detection logic (useIsCallerAdmin / useIsCallerAdminWithTimeout hooks) and/or the actor connection setup (useActor). The fix must ensure that: (a) the actor is fully initialised before the admin check is attempted, (b) any failed or stalled actor connection is detected and surfaced rather than silently hanging, and (c) the admin check resolves to a definitive result (admin / not-admin / error) within a reasonable timeout instead of remaining in a perpetual loading state.",
+      "text": "In the Navigation component, fix the admin button flashing behavior by adding a hardcoded principal fallback: if the authenticated principal matches the owner's known principal, treat the user as admin regardless of the backend `isCallerAdmin` call result. This ensures the Admin link is shown even if the backend call is slow or fails.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "Der Admin Buttom ist in der Live Web page grau und lädt endlos, das scheint erneut auf Verbingungsprobleme hinzuweisen."
+          "Verwende fallback: Zeig Button immer für meine Principal",
+          "Der Admin-Button blinkt kurz beim Laden und verschwindet dann."
         ]
       },
       "acceptanceCriteria": [
-        "On the live production site, the Admin button becomes clickable (not grey/disabled) within a few seconds after login for a user with admin privileges.",
-        "If the actor connection cannot be established within the timeout window, the Admin button displays a clear error or disabled state with a retry affordance instead of spinning indefinitely.",
-        "The useIsCallerAdminWithTimeout hook always transitions out of its loading phase — it must reach one of: done, timed-out, or error — and never remain stuck in waiting-actor or checking-admin indefinitely.",
-        "The fix is verified on the deployed (production) canister, not only in local development."
+        "The Admin navigation link does not flash or disappear on page load for the admin principal.",
+        "A hardcoded fallback principal check is implemented in the Navigation component so that the known admin principal always sees the Admin link.",
+        "The fallback is applied even when `isCallerAdmin` backend call is still loading or returns an error."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Harden the actor initialisation in useActor so that connection failures are caught and exposed via a stable error state rather than leaving dependent hooks in a perpetual loading loop. Add a maximum wait threshold so that hooks that depend on the actor (such as admin role checks) can detect an unavailable actor and exit gracefully.",
+      "text": "In `useIsCallerAdmin.ts` and/or `useIsCallerAdminWithTimeout.ts`, suppress the loading-then-false flash: hold the admin UI in a 'loading/indeterminate' state (do not render the button as hidden) until the backend call either resolves successfully or times out. Only set `isAdmin = false` after a definitive response or timeout, not during initial load.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "das scheint erneut auf Verbingungsprobleme hinzuweisen"
+          "Der Admin-Button blinkt kurz beim Laden und verschwindet dann.",
+          "Entferne oder kommentiere den Call vorübergehend aus, damit Button bleibt."
         ]
       },
       "acceptanceCriteria": [
-        "useActor exposes an isError / error state when the actor cannot be created within the timeout.",
-        "Hooks that gate on actor readiness (useIsCallerAdmin, useIsCallerAdminWithTimeout) react to the actor error state by transitioning to their own error state instead of staying in loading.",
-        "No regression: anonymous (unauthenticated) users still see the navigation without the Admin button."
+        "The Admin button/link is not rendered at all (neither shown nor hidden) while the admin status check is still loading.",
+        "The Admin button only disappears if the backend definitively returns `false` for `isCallerAdmin` after the call resolves.",
+        "No flash of the Admin button followed by its removal occurs for non-admin users."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Update the Navigation component to handle the timed-out and error states returned by useIsCallerAdminWithTimeout: when a timeout or connection error occurs, hide the Admin button entirely (rather than showing it in a perpetual grey/loading state) and optionally display a subtle retry trigger.",
-      "target": "frontend",
+      "text": "Verify that the `isCallerAdmin` backend method in `backend/main.mo` is accessible on the live canister for authenticated callers. Ensure the method is `public` and returns a stable result for the admin principal. Add a diagnostic trace or log if helpful.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "Der Admin Buttom ist in der Live Web page grau und lädt endlos"
+          "Stelle sicher, dass der Backend-Call (isAdmin / auth check) auf Live funktioniert."
         ]
       },
       "acceptanceCriteria": [
-        "When useIsCallerAdminWithTimeout reaches the timed-out or error phase, the Admin button is hidden from the navigation bar.",
-        "A lightweight retry mechanism (e.g., a small icon button or re-checking on next user interaction) is available so the admin can attempt to reconnect without a full page reload.",
-        "The loading spinner/grey state is only shown during the bounded waiting period, not indefinitely."
+        "The `isCallerAdmin` method is publicly accessible in the main actor.",
+        "The method correctly returns `true` for the designated admin principal on the live canister.",
+        "No unauthorized or anonymous access silently returns `false` without proper error state."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useActor.ts, frontend/src/hooks/useInternetIdentity.ts, or any path listed in frontend.immutablePaths — implement fixes in wrapper hooks or separate utility modules instead.",
-    "All changes must be compatible with the existing Internet Identity authentication flow.",
-    "Backend Motoko code must not be changed unless a backend-side root cause is confirmed."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
+    "The hardcoded admin principal fallback must only be used as a safety net — do not remove the backend isCallerAdmin call entirely.",
+    "The admin principal hardcode must be clearly commented as a temporary fallback to be replaced once the backend call is confirmed stable."
   ],
   "nonGoals": [
-    "Redesigning the overall navigation layout or adding new navigation items.",
-    "Changes to NFT, collection, or blog functionality.",
-    "Adding new authentication providers."
+    "Replacing Internet Identity authentication with another auth system.",
+    "Adding new admin features or dashboard changes.",
+    "Changing the visual design or styling of the navigation."
   ],
   "imageRequirements": {
     "required": [],

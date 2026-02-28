@@ -1,40 +1,44 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
+  "summary": "Web app project with admin functionality. User reported admin button flashing and disappearing on load due to backend auth/isAdmin check issues on live.",
+  "architectural_notes": [
+    "Admin button visibility is controlled by a backend isAdmin/auth check; this check is unreliable on live causing the button to flash and disappear."
+  ],
   "known_issues": [
-    "Admin button appears grey and loads indefinitely on the live webpage, indicating recurring connection problems."
+    "Admin button blinks briefly on page load then disappears due to failed/slow isAdmin backend call on live environment."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-diagnose-and-fix-the-root-cause-of-the-admin-button-appearing-permanently-grey-and-spinning-indefinitely-on-the-live-production-site-the-issue-originates-in-the-admin-role-detection-logic-useiscalleradmin-useiscalleradminwithtimeout-hooks-and-or-the-actor-connection-setup-useactor-the-fix-must-ensure-that-a-the-actor-is-fully-initialised-before-the-admin-check-is-attempted-b-any-failed-or-stalled-actor-connection-is-detected-and-surfaced-rather-than-silently-hanging-and-c-the-admin-check-resolves-to-a-definitive-result-admin-not-admin-error-within-a-reasonable-timeout-instead-of-remaining-in-a-perpetual-loading-state",
-      "title": "Diagnose and fix the root cause of the Admin button appearing permanently grey and spinning indefinitely on the live production site. The issue originates in the admin role detection logic (useIsCallerAdmin / useIsCallerAdminWithTimeout hooks) and/or the actor connection setup (useActor). The fix must ensure that: (a) the actor is fully initialised before the admin check is attempted, (b) any failed or stalled actor connection is detected and surfaced rather than silently hanging, and (c) the admin check resolves to a definitive result (admin / not-admin / error) within a reasonable timeout instead of remaining in a perpetual loading state.",
+      "id": "feature-in-the-navigation-component-fix-the-admin-button-flashing-behavior-by-adding-a-hardcoded-principal-fallback-if-the-authenticated-principal-matches-the-owner-s-known-principal-treat-the-user-as-admin-regardless-of-the-backend-iscalleradmin-call-result-this-ensures-the-admin-link-is-shown-even-if-the-backend-call-is-slow-or-fails",
+      "title": "In the Navigation component, fix the admin button flashing behavior by adding a hardcoded principal fallback: if the authenticated principal matches the owner's known principal, treat the user as admin regardless of the backend `isCallerAdmin` call result. This ensures the Admin link is shown even if the backend call is slow or fails.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-harden-the-actor-initialisation-in-useactor-so-that-connection-failures-are-caught-and-exposed-via-a-stable-error-state-rather-than-leaving-dependent-hooks-in-a-perpetual-loading-loop-add-a-maximum-wait-threshold-so-that-hooks-that-depend-on-the-actor-such-as-admin-role-checks-can-detect-an-unavailable-actor-and-exit-gracefully",
-      "title": "Harden the actor initialisation in useActor so that connection failures are caught and exposed via a stable error state rather than leaving dependent hooks in a perpetual loading loop. Add a maximum wait threshold so that hooks that depend on the actor (such as admin role checks) can detect an unavailable actor and exit gracefully.",
+      "id": "feature-in-useiscalleradmin-ts-and-or-useiscalleradminwithtimeout-ts-suppress-the-loading-then-false-flash-hold-the-admin-ui-in-a-loading-indeterminate-state-do-not-render-the-button-as-hidden-until-the-backend-call-either-resolves-successfully-or-times-out-only-set-isadmin-false-after-a-definitive-response-or-timeout-not-during-initial-load",
+      "title": "In `useIsCallerAdmin.ts` and/or `useIsCallerAdminWithTimeout.ts`, suppress the loading-then-false flash: hold the admin UI in a 'loading/indeterminate' state (do not render the button as hidden) until the backend call either resolves successfully or times out. Only set `isAdmin = false` after a definitive response or timeout, not during initial load.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
-    },
+    }
+  ],
+  "new_feature_requests": [
     {
-      "id": "feature-update-the-navigation-component-to-handle-the-timed-out-and-error-states-returned-by-useiscalleradminwithtimeout-when-a-timeout-or-connection-error-occurs-hide-the-admin-button-entirely-rather-than-showing-it-in-a-perpetual-grey-loading-state-and-optionally-display-a-subtle-retry-trigger",
-      "title": "Update the Navigation component to handle the timed-out and error states returned by useIsCallerAdminWithTimeout: when a timeout or connection error occurs, hide the Admin button entirely (rather than showing it in a perpetual grey/loading state) and optionally display a subtle retry trigger.",
+      "id": "AR-3",
+      "summary": "Verify that the `isCallerAdmin` backend method in `backend/main.mo` is accessible on the live canister for authenticated callers. Ensure the method is `public` and returns a stable result for the admin principal. Add a diagnostic trace or log if helpful.",
       "reqIds": [
         "REQ-3"
       ],
-      "version": 1
+      "status": "pending"
     }
   ],
-  "new_feature_requests": [],
-  "projectName": "Fix Admin button infinite loading / connection failure on live site",
+  "gameProjectType": "none",
+  "projectName": "Istvan Seidel NFT Portfolio",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

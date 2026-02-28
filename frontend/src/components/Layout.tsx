@@ -1,8 +1,13 @@
 import Navigation from './Navigation';
 import LoginButton from './LoginButton';
+import ActorErrorBanner from './ActorErrorBanner';
+import BackendStatusIndicator from './BackendStatusIndicator';
+import { useActorReady } from '@/hooks/useActorReady';
 import { Heart } from 'lucide-react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const { actorError, clearError } = useActorReady();
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Header */}
@@ -27,12 +32,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
+      {/* Actor Error Banner — shown when backend is unreachable after timeout */}
+      {actorError && (
+        <ActorErrorBanner error={actorError} onRetry={clearError} />
+      )}
+
       {/* Main Content */}
       <main className="flex-1">{children}</main>
 
       {/* Footer */}
       <footer className="border-t border-border/40 bg-card/30 py-8">
         <div className="container mx-auto px-4 text-center">
+          <div className="mb-2 flex items-center justify-center">
+            <BackendStatusIndicator />
+          </div>
           <p className="text-sm text-muted-foreground">
             © {new Date().getFullYear()} Istvan Seidel - Lichtkünstler. Erstellt mit{' '}
             <Heart className="inline h-4 w-4 fill-primary text-primary" /> bei{' '}

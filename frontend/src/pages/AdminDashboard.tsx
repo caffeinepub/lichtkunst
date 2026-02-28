@@ -1,255 +1,171 @@
-import React, { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useState } from 'react';
 import { useIsCallerAdminWithTimeout } from '../hooks/useIsCallerAdminWithTimeout';
-import AdminCollectionList from '../components/AdminCollectionList';
-import AdminNFTList from '../components/AdminNFTList';
 import AdminCollectionForm from '../components/AdminCollectionForm';
+import AdminCollectionList from '../components/AdminCollectionList';
 import AdminNFTForm from '../components/AdminNFTForm';
-import { Button } from '@/components/ui/button';
+import AdminNFTList from '../components/AdminNFTList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShieldCheck, RefreshCw, LogIn, Loader2, Clock, AlertTriangle, Wifi } from 'lucide-react';
+import { Shield, Loader2, AlertTriangle, RefreshCw, Clock, WifiOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { NFTItem } from '../backend';
 
 export default function AdminDashboard() {
-  const navigate = useNavigate();
-  const { identity, isInitializing, login } = useInternetIdentity();
-  // Use a generous timeout (90s) to handle cold-start IC canister delays
-  const { isAdmin, isLoading, timedOut, error, retry, actorWaiting } =
-    useIsCallerAdminWithTimeout(90000);
-
+  const { phase, isAdmin, retry } = useIsCallerAdminWithTimeout(90000);
   const [editingNFT, setEditingNFT] = useState<NFTItem | null>(null);
-  const [showNFTForm, setShowNFTForm] = useState(false);
-
-  const isAuthenticated = !!identity && !identity.getPrincipal().isAnonymous();
 
   const handleEditNFT = (nft: NFTItem) => {
     setEditingNFT(nft);
-    setShowNFTForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNFTFormDone = () => {
     setEditingNFT(null);
-    setShowNFTForm(false);
   };
 
-  // Still initializing identity
-  if (isInitializing) {
+  // Loading states
+  if (phase === 'initializing') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground font-sans">Initialisierung…</p>
         </div>
       </div>
     );
   }
 
-  // Not authenticated
-  if (!isAuthenticated) {
+  if (phase === 'waiting-for-actor') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-6 max-w-sm mx-auto px-4">
-          <ShieldCheck className="h-16 w-16 text-muted-foreground mx-auto" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground font-sans">Verbindung wird hergestellt…</p>
+          <p className="text-xs text-muted-foreground/60 font-sans">
+            Verbindung zum ICP-Netzwerk wird aufgebaut
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'checking') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Shield className="w-10 h-10 text-primary mx-auto animate-pulse" />
+          <p className="text-muted-foreground font-sans">Berechtigungen werden geprüft…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === 'timed-out') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-6 max-w-md px-4">
+          <Clock className="w-12 h-12 text-amber-500 mx-auto" />
           <div>
-            <h2 className="font-serif text-2xl font-light text-foreground mb-2">
-              Anmeldung erforderlich
-            </h2>
+            <h2 className="text-xl font-serif font-semibold mb-2">Zeitüberschreitung</h2>
             <p className="text-muted-foreground font-sans text-sm">
-              Bitte melden Sie sich an, um auf den Admin-Bereich zuzugreifen.
+              Die Verbindung zum ICP-Netzwerk hat zu lange gedauert. Bitte versuche es erneut.
             </p>
           </div>
-          <Button onClick={() => login()} className="gap-2">
-            <LogIn className="h-4 w-4" />
-            Anmelden
+          <Button onClick={retry} variant="outline" className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Erneut versuchen
           </Button>
         </div>
       </div>
     );
   }
 
-  // Waiting for actor to initialize (backend connection) or actor not yet matching identity
-  if (isLoading && actorWaiting) {
+  if (phase === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4 max-w-sm mx-auto px-4">
-          <Wifi className="h-10 w-10 animate-pulse text-primary mx-auto" />
-          <p className="text-foreground font-sans font-medium">Verbindung wird hergestellt…</p>
-          <p className="text-muted-foreground font-sans text-xs">
-            Die Verbindung zum Internet Computer wird aufgebaut. Dies kann beim ersten Start einige
-            Sekunden dauern.
-          </p>
-          <div className="flex justify-center pt-2">
-            <Button variant="outline" size="sm" onClick={retry} className="gap-2">
-              <RefreshCw className="h-3 w-3" />
-              Neu versuchen
-            </Button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-6 max-w-md px-4">
+          <WifiOff className="w-12 h-12 text-destructive mx-auto" />
+          <div>
+            <h2 className="text-xl font-serif font-semibold mb-2">Verbindungsfehler</h2>
+            <p className="text-muted-foreground font-sans text-sm">
+              Die Admin-Prüfung ist fehlgeschlagen. Bitte überprüfe deine Verbindung und versuche
+              es erneut.
+            </p>
           </div>
+          <Button onClick={retry} variant="outline" className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Erneut versuchen
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Checking admin status
-  if (isLoading) {
+  if (phase === 'not-admin' || !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground font-sans">Berechtigungen werden geprüft…</p>
-          <p className="text-muted-foreground/60 font-sans text-xs">
-            Dies kann beim ersten Start einige Sekunden dauern.
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md px-4">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
+          <h2 className="text-xl font-serif font-semibold">Zugriff verweigert</h2>
+          <p className="text-muted-foreground font-sans text-sm">
+            Du hast keine Admin-Berechtigung für diesen Bereich.
           </p>
         </div>
       </div>
     );
   }
 
-  // Timed out — show retry
-  if (timedOut) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-6 max-w-sm mx-auto px-4">
-          <Clock className="h-16 w-16 text-warning mx-auto" />
-          <div>
-            <h2 className="font-serif text-2xl font-light text-foreground mb-2">
-              Zeitüberschreitung
-            </h2>
-            <p className="text-muted-foreground font-sans text-sm">
-              Die Verbindung zum Backend hat länger als erwartet gedauert. Bitte versuchen Sie es
-              erneut.
-            </p>
-          </div>
-          <div className="flex gap-3 justify-center">
-            <Button onClick={retry} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Erneut versuchen
-            </Button>
-            <Button variant="outline" onClick={() => window.location.reload()} className="gap-2">
-              Seite neu laden
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-6 max-w-sm mx-auto px-4">
-          <AlertTriangle className="h-16 w-16 text-destructive mx-auto" />
-          <div>
-            <h2 className="font-serif text-2xl font-light text-foreground mb-2">
-              Verbindungsfehler
-            </h2>
-            <p className="text-muted-foreground font-sans text-sm">
-              {error.message || 'Verbindung zum Backend fehlgeschlagen.'}
-            </p>
-          </div>
-          <div className="flex gap-3 justify-center">
-            <Button onClick={retry} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Erneut versuchen
-            </Button>
-            <Button variant="outline" onClick={() => window.location.reload()} className="gap-2">
-              Seite neu laden
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Not admin
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-6 max-w-sm mx-auto px-4">
-          <ShieldCheck className="h-16 w-16 text-destructive mx-auto" />
-          <div>
-            <h2 className="font-serif text-2xl font-light text-foreground mb-2">
-              Zugriff verweigert
-            </h2>
-            <p className="text-muted-foreground font-sans text-sm">
-              Sie haben keine Administratorrechte für diesen Bereich.
-            </p>
-          </div>
-          <div className="flex gap-3 justify-center">
-            <Button onClick={retry} variant="outline" className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Erneut prüfen
-            </Button>
-            <Button variant="outline" onClick={() => navigate({ to: '/' })} className="gap-2">
-              Zur Startseite
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Admin granted — show dashboard
+  // phase === 'success' && isAdmin
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="flex items-center gap-3 mb-8">
-          <ShieldCheck className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="font-serif text-3xl font-light text-foreground">Admin-Dashboard</h1>
-            <p className="text-muted-foreground font-sans text-sm">
-              Verwaltung von Kollektionen und NFTs
-            </p>
-          </div>
-        </div>
-
-        <Tabs defaultValue="collections" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="collections">Kollektionen</TabsTrigger>
-            <TabsTrigger value="nfts">NFTs</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="collections" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div>
-                <h2 className="font-serif text-xl font-light text-foreground mb-4">
-                  Neue Kollektion
-                </h2>
-                <AdminCollectionForm />
-              </div>
-              <div>
-                <h2 className="font-serif text-xl font-light text-foreground mb-4">
-                  Vorhandene Kollektionen
-                </h2>
-                <AdminCollectionList />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="nfts" className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div>
-                <h2 className="font-serif text-xl font-light text-foreground mb-4">
-                  {editingNFT ? 'NFT bearbeiten' : 'Neues NFT'}
-                </h2>
-                <AdminNFTForm
-                  nft={editingNFT ?? undefined}
-                  onSuccess={handleNFTFormDone}
-                  onCancel={showNFTForm && editingNFT ? handleNFTFormDone : undefined}
-                />
-              </div>
-              <div>
-                <h2 className="font-serif text-xl font-light text-foreground mb-4">
-                  Vorhandene NFTs
-                </h2>
-                <AdminNFTList onEdit={handleEditNFT} />
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="flex items-center gap-3 mb-8">
+        <Shield className="w-7 h-7 text-primary" />
+        <h1 className="text-3xl font-serif font-light tracking-wide">Admin Dashboard</h1>
       </div>
+
+      <Tabs defaultValue="collections">
+        <TabsList className="mb-6">
+          <TabsTrigger value="collections">Kollektionen</TabsTrigger>
+          <TabsTrigger value="nfts">NFTs</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="collections" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <h2 className="font-serif text-xl font-light text-foreground mb-4">
+                Neue Kollektion
+              </h2>
+              <AdminCollectionForm />
+            </div>
+            <div>
+              <h2 className="font-serif text-xl font-light text-foreground mb-4">
+                Vorhandene Kollektionen
+              </h2>
+              <AdminCollectionList />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="nfts" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <h2 className="font-serif text-xl font-light text-foreground mb-4">
+                {editingNFT ? 'NFT bearbeiten' : 'Neues NFT'}
+              </h2>
+              <AdminNFTForm
+                nft={editingNFT ?? undefined}
+                onSuccess={handleNFTFormDone}
+                onCancel={editingNFT ? handleNFTFormDone : undefined}
+              />
+            </div>
+            <div>
+              <h2 className="font-serif text-xl font-light text-foreground mb-4">
+                Vorhandene NFTs
+              </h2>
+              <AdminNFTList onEdit={handleEditNFT} />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,64 +1,56 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T19:55:08.825Z",
+  "generatedAt": "2026-02-28T22:18:43.828Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 3,
-    "implemented": 3,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Diagnose and fix the root cause of the Admin button appearing permanently grey and spinning indefinitely on the live production site. The issue originates in the admin role detection logic (useIsCallerAdmin / useIsCallerAdminWithTimeout hooks) and/or the actor connection setup (useActor). The fix must ensure that: (a) the actor is fully initialised before the admin check is attempted, (b) any failed or stalled actor connection is detected and surfaced rather than silently hanging, and (c) the admin check resolves to a definitive result (admin / not-admin / error) within a reasonable timeout instead of remaining in a perpetual loading state.",
+        "summary": "In the Navigation component, fix the admin button flashing behavior by adding a hardcoded principal fallback: if the authenticated principal matches the owner's known principal, treat the user as admin regardless of the backend `isCallerAdmin` call result. This ensures the Admin link is shown even if the backend call is slow or fails.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-          "frontend/src/hooks/useActorReady.ts"
+          "frontend/src/components/Navigation.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-          "frontend/src/hooks/useActorReady.ts"
+          "frontend/src/components/Navigation.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Harden the actor initialisation in useActor so that connection failures are caught and exposed via a stable error state rather than leaving dependent hooks in a perpetual loading loop. Add a maximum wait threshold so that hooks that depend on the actor (such as admin role checks) can detect an unavailable actor and exit gracefully.",
+        "summary": "In `useIsCallerAdmin.ts` and/or `useIsCallerAdminWithTimeout.ts`, suppress the loading-then-false flash: hold the admin UI in a 'loading/indeterminate' state (do not render the button as hidden) until the backend call either resolves successfully or times out. Only set `isAdmin = false` after a definitive response or timeout, not during initial load.",
         "status": "implemented",
         "plannedFiles": [
+          "frontend/src/hooks/useIsCallerAdmin.ts",
           "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-          "frontend/src/hooks/useIsCallerAdmin.ts"
+          "frontend/src/components/Navigation.tsx"
         ],
         "matchedFiles": [
           "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-          "frontend/src/hooks/useIsCallerAdmin.ts"
+          "frontend/src/components/Navigation.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Update the Navigation component to handle the timed-out and error states returned by useIsCallerAdminWithTimeout: when a timeout or connection error occurs, hide the Admin button entirely (rather than showing it in a perpetual grey/loading state) and optionally display a subtle retry trigger.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/Navigation.tsx",
-          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/Navigation.tsx",
-          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
-        ]
+        "summary": "Verify that the `isCallerAdmin` backend method in `backend/main.mo` is accessible on the live canister for authenticated callers. Ensure the method is `public` and returns a stable result for the admin principal. Add a diagnostic trace or log if helpful.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/components/Navigation.tsx",
-    "frontend/src/hooks/useActorReady.ts",
-    "frontend/src/hooks/useIsCallerAdmin.ts",
     "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
     "project_state.json",
     "scratch/component-selection.json",

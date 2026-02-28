@@ -1,69 +1,47 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin button infinite loading / connection failure on live site",
+  "title": "Fix Admin Button Flash/Disappear on Live",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Diagnose and fix the root cause of the Admin button infinite loading state by ensuring the admin role detection logic resolves to a definitive result (admin / not-admin / error) within a reasonable timeout instead of remaining in a perpetual loading state",
+      "summary": "Add hardcoded admin principal fallback in Navigation component to prevent button flash",
       "acceptanceCriteria": [
-        "On the live production site, the Admin button becomes clickable (not grey/disabled) within a few seconds after login for a user with admin privileges.",
-        "If the actor connection cannot be established within the timeout window, the Admin button displays a clear error or disabled state with a retry affordance instead of spinning indefinitely.",
-        "The useIsCallerAdminWithTimeout hook always transitions out of its loading phase — it must reach one of: done, timed-out, or error — and never remain stuck in waiting-actor or checking-admin indefinitely.",
-        "The fix is verified on the deployed (production) canister, not only in local development."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-          "operation": "modify",
-          "description": "Add explicit timeout handling in both the waiting-actor and checking-admin phases. Ensure that if the actor doesn't become ready within the configured timeout window, the hook transitions to the timed-out phase. Add a maximum duration guard that forces a transition to timed-out if the total elapsed time exceeds the timeout regardless of phase. Add error catching for the isCallerAdmin query to transition to the error phase on query failures. Ensure the cleanup function cancels any pending timers to prevent state updates after unmount."
-        },
-        {
-          "path": "frontend/src/hooks/useActorReady.ts",
-          "operation": "create",
-          "description": "Create a new lightweight wrapper hook around useActor that exposes a boolean isActorReady flag and an actorError state. This hook should return true for isActorReady only when the actor is fully initialized and matches the current identity. If the actor initialization takes longer than a configurable threshold (e.g., 10 seconds), set actorError to indicate a connection failure. This allows dependent hooks like useIsCallerAdminWithTimeout to detect stalled actor connections without modifying the immutable useActor.ts."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Harden the actor initialisation by exposing connection failures via a stable error state and adding a maximum wait threshold so dependent hooks can detect an unavailable actor and exit gracefully",
-      "acceptanceCriteria": [
-        "useActor exposes an isError / error state when the actor cannot be created within the timeout.",
-        "Hooks that gate on actor readiness (useIsCallerAdmin, useIsCallerAdminWithTimeout) react to the actor error state by transitioning to their own error state instead of staying in loading.",
-        "No regression: anonymous (unauthenticated) users still see the navigation without the Admin button."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
-          "operation": "modify",
-          "description": "Integrate the new useActorReady hook. In the waiting-actor phase, check for actorError from useActorReady and transition to the error phase if the actor connection has failed. Replace the current actor-readiness check with the isActorReady flag from useActorReady to ensure the hook only proceeds to checking-admin when the actor is confirmed ready. Add a totalElapsedTime tracker that starts when the hook mounts and forces a transition to timed-out if the total time exceeds the timeout threshold, even if individual phase transitions are delayed."
-        },
-        {
-          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
-          "operation": "modify",
-          "description": "Add integration with useActorReady to detect actor connection errors. If actorError is set, immediately return isAdmin: false and isLoading: false with an error flag. Ensure the query is only enabled when isActorReady is true (not just when actor is truthy). Add a timeout mechanism so that if the actor doesn't become ready within 10 seconds, the hook stops waiting and returns an error state. This prevents the hook from staying in a loading state indefinitely when the actor initialization stalls."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Update the Navigation component to handle the timed-out and error states from useIsCallerAdminWithTimeout by hiding the Admin button when a timeout or connection error occurs, and optionally displaying a subtle retry trigger",
-      "acceptanceCriteria": [
-        "When useIsCallerAdminWithTimeout reaches the timed-out or error phase, the Admin button is hidden from the navigation bar.",
-        "A lightweight retry mechanism (e.g., a small icon button or re-checking on next user interaction) is available so the admin can attempt to reconnect without a full page reload.",
-        "The loading spinner/grey state is only shown during the bounded waiting period, not indefinitely."
+        "The Admin navigation link does not flash or disappear on page load for the admin principal.",
+        "A hardcoded fallback principal check is implemented in the Navigation component so that the known admin principal always sees the Admin link.",
+        "The fallback is applied even when `isCallerAdmin` backend call is still loading or returns an error."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/Navigation.tsx",
           "operation": "modify",
-          "description": "Update the Navigation component to destructure the phase, isAdmin, and retry function from useIsCallerAdminWithTimeout. Hide the Admin button entirely when phase is 'timed-out' or 'error'. Show the Admin button with a loading/disabled state only when phase is 'waiting-actor' or 'checking-admin'. When phase is 'done', show the Admin button as enabled if isAdmin is true, or hide it if isAdmin is false. Add a small retry icon button (e.g., using Lucide's RefreshCw icon) that appears near the navigation when phase is 'timed-out' or 'error', which calls the retry function when clicked. Ensure the retry button is visually subtle (e.g., small, opacity-reduced) so it doesn't clutter the navigation bar."
+          "description": "Add a hardcoded admin principal constant at the top of the file (clearly commented as a temporary fallback). Modify the admin link visibility logic to check if the current identity's principal matches the hardcoded admin principal as a fallback. If the principal matches, show the Admin link regardless of the backend `isCallerAdmin` result. Keep the existing backend call but treat the hardcoded check as a safety net. Ensure the fallback is applied when the backend call is loading, errors, or returns false for the known admin principal."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Suppress loading-then-false flash in admin status hooks by holding indeterminate state",
+      "acceptanceCriteria": [
+        "The Admin button/link is not rendered at all (neither shown nor hidden) while the admin status check is still loading.",
+        "The Admin button only disappears if the backend definitively returns `false` for `isCallerAdmin` after the call resolves.",
+        "No flash of the Admin button followed by its removal occurs for non-admin users."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
+          "operation": "modify",
+          "description": "Modify the hook to return an explicit loading state that remains true until the backend call resolves or errors. Do not allow isAdmin to become false during the initial load phase. Only set isAdmin to false after the query has completed (isFetched is true) and the backend returned false. Ensure the hook distinguishes between 'still loading' and 'definitely not admin'."
         },
         {
           "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Add a retry function to the return value of useIsCallerAdminWithTimeout. The retry function should reset the phase to 'idle', clear any previous error or timeout state, and restart the admin check from scratch. This allows the Navigation component to offer a manual retry mechanism without requiring a full page reload. Ensure that calling retry while a check is in progress cancels the current check and starts a new one."
+          "description": "Refactor the phase state machine to hold an indeterminate/loading state longer. Do not transition to a 'not admin' phase while the backend call is pending or during actor initialization. Only mark the user as non-admin after a definitive backend response or timeout. Ensure the hook returns a clear loading flag that the Navigation component can use to avoid rendering the Admin button prematurely."
+        },
+        {
+          "path": "frontend/src/components/Navigation.tsx",
+          "operation": "modify",
+          "description": "Update the admin link rendering logic to check both the loading state and the isAdmin result. Do not render the Admin link at all (not even as hidden) while loading is true. Only render it when loading is false and either isAdmin is true or the hardcoded principal fallback matches. This prevents any flash of the button during the loading phase."
         }
       ]
     }

@@ -1,96 +1,60 @@
-import { useEffect, useRef, useState } from 'react';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import { useQueryClient } from '@tanstack/react-query';
-
-const ACTOR_READY_TIMEOUT_MS = 15_000; // 15 seconds max wait for actor
-
-interface ActorReadyResult {
-  isActorReady: boolean;
-  actorError: Error | null;
-}
+import { useEffect, useRef, useState } from 'react';
 
 /**
- * Lightweight wrapper around useActor that exposes a boolean isActorReady flag
- * and an actorError state. Returns true for isActorReady only when the actor is
- * fully initialized and matches the current identity. If actor initialization
- * takes longer than ACTOR_READY_TIMEOUT_MS, sets actorError to indicate failure.
+ * Lightweight hook that exposes whether the actor is fully ready for calls.
+ * isActorReady: true only when actor exists and is not currently fetching.
+ * actorError: set if actor fails to initialize within the 20-second timeout window.
  */
-export function useActorReady(): ActorReadyResult {
+export function useActorReady() {
   const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
-
+  const { isInitializing } = useInternetIdentity();
   const [actorError, setActorError] = useState<Error | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const mountedRef = useRef(true);
-  const resolvedRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasBeenReady = useRef(false);
 
-  const principalKey = identity?.getPrincipal().toString() ?? undefined;
-  const actorQueryState = queryClient.getQueryState(['actor', principalKey]);
-  const isActorReady =
-    actorQueryState?.status === 'success' && !!actor && !actorFetching;
-
-  // If actor query itself errored, surface that immediately
-  const actorQueryError = actorQueryState?.status === 'error' ? actorQueryState.error : null;
+  const isActorReady = !!actor && !actorFetching && !isInitializing;
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  // Reset when principal changes
-  useEffect(() => {
-    resolvedRef.current = false;
-    setActorError(null);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, [principalKey]);
-
-  // Surface actor query errors immediately
-  useEffect(() => {
-    if (actorQueryError) {
-      setActorError(
-        actorQueryError instanceof Error
-          ? actorQueryError
-          : new Error('Actor initialization failed')
-      );
-      resolvedRef.current = true;
-    }
-  }, [actorQueryError]);
-
-  // Start timeout when actor is fetching and not yet ready
-  useEffect(() => {
+    // Once ready, clear any pending error and mark as ready
     if (isActorReady) {
-      resolvedRef.current = true;
+      hasBeenReady.current = true;
       setActorError(null);
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
       return;
     }
 
-    if (resolvedRef.current) return;
+    // Don't start a new timer if one is already running
+    if (timerRef.current) return;
 
-    if (actorFetching && !timeoutRef.current) {
-      timeoutRef.current = setTimeout(() => {
-        timeoutRef.current = null;
-        if (mountedRef.current && !resolvedRef.current) {
-          resolvedRef.current = true;
-          setActorError(new Error('Actor connection timed out'));
-        }
-      }, ACTOR_READY_TIMEOUT_MS);
-    }
-  }, [isActorReady, actorFetching]);
+    // Start a 20-second timeout to detect stalled actor initialization
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null;
+      if (!hasBeenReady.current) {
+        setActorError(
+          new Error(
+            'Verbindung zum Backend konnte nicht hergestellt werden. Bitte überprüfe deine Internetverbindung und versuche es erneut.'
+          )
+        );
+      }
+    }, 20000);
 
-  return { isActorReady, actorError };
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isActorReady]);
+
+  const clearError = () => {
+    setActorError(null);
+    hasBeenReady.current = false;
+  };
+
+  return { isActorReady, actorError, clearError };
 }

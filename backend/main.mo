@@ -1,4 +1,5 @@
 import Map "mo:core/Map";
+import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Principal "mo:core/Principal";
@@ -9,7 +10,7 @@ import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
 
-actor {
+(actor {
   type TokenId = Nat;
 
   public type NFTCollection = {
@@ -67,6 +68,11 @@ actor {
   include MixinStorage();
   include MixinAuthorization(accessControlState);
 
+  // Helper: Convert Map values to Array
+  func mapToArray<K, V>(map : Map.Map<K, V>) : [V] {
+    map.values().toArray();
+  };
+
   // User profile functions
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
@@ -91,19 +97,18 @@ actor {
 
   // NFT Query Functions - public read access, no auth required
   public query func getAllCollections() : async [NFTCollection] {
-    collections.values().toArray();
+    mapToArray(collections);
   };
 
   public query func getAllNFTs() : async [NFTItem] {
-    nfts.values().toArray();
+    mapToArray(nfts);
   };
 
   public query func getNFTsByCollection(collectionId : Text) : async [NFTItem] {
-    nfts.values().toArray().filter(
-      func(nft) {
-        nft.collectionId == collectionId;
-      }
-    );
+    let all = mapToArray(nfts);
+    all.filter(func(nft : NFTItem) : Bool {
+      nft.collectionId == collectionId;
+    });
   };
 
   public query func getNFT(id : Text) : async ?NFTItem {
@@ -148,12 +153,10 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete collections");
     };
-
     switch (collections.get(id)) {
       case (null) { Runtime.trap("Collection does not exist") };
       case (?_) {
         collections.remove(id);
-
         let keys = nfts.keys().toArray();
         for (key in keys.values()) {
           switch (nfts.get(key)) {
@@ -196,7 +199,7 @@ actor {
     nfts.add(id, nft);
   };
 
-  // Backend function to upload image and get URL (used by NFT admin functions)
+  // Upload image - authenticated users only
   public shared ({ caller }) func uploadImage(blob : Storage.ExternalBlob) : async Storage.ExternalBlob {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users or admins can upload images");
@@ -241,7 +244,6 @@ actor {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete NFTs");
     };
-
     switch (nfts.get(id)) {
       case (null) { Runtime.trap("NFT does not exist") };
       case (?_) {
@@ -250,13 +252,11 @@ actor {
     };
   };
 
-  // NFT Minting (ICRC-7 compatible)
-  // Only authenticated users can mint NFTs
+  // NFT Minting - only authenticated users can mint NFTs
   public shared ({ caller }) func mintNFT(request : MintRequest) : async TokenId {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can mint NFTs");
     };
-
     let tokenId = nextTokenId;
     nextTokenId += 1;
 
@@ -300,25 +300,18 @@ actor {
     switch (userNFTs.get(caller)) {
       case (null) { [] };
       case (?tokenIds) {
-        let ownedNFTs = tokenIds.map(
-          func(id) {
-            switch (issuedNFTs.get(id)) {
-              case (null) { null };
-              case (?nft) { ?nft };
-            };
-          }
-        );
-        let filteredNFTsList = ownedNFTs.filter(func(x) { x != null }).map(func(x) { x.unwrap() });
-        filteredNFTsList;
+        let ownedNFTs = tokenIds.map(func(id) { issuedNFTs.get(id) : ?NFT }).filter(func(nft) { nft != null }).map(func(nft) { nft.unwrap() });
+        ownedNFTs;
       };
     };
   };
 
   // Public read: anyone can list all issued NFTs
   public query func listAllNFTs() : async [NFT] {
-    issuedNFTs.values().toArray();
+    mapToArray(issuedNFTs);
   };
 
+  // Authenticated users can list NFTs by principal
   public query ({ caller }) func listNFTsByPrincipal(principal : Principal) : async [NFT] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Must be an authenticated user");
@@ -326,28 +319,20 @@ actor {
     switch (userNFTs.get(principal)) {
       case (null) { [] };
       case (?tokenIds) {
-        let ownedNFTs = tokenIds.map(
-          func(id) {
-            switch (issuedNFTs.get(id)) {
-              case (null) { null };
-              case (?nft) { ?nft };
-            };
-          }
-        );
-        let filteredNFTsList = ownedNFTs.filter(func(x) { x != null }).map(func(x) { x.unwrap() });
-        filteredNFTsList;
+        let ownedNFTs = tokenIds.map(func(id) { issuedNFTs.get(id) : ?NFT }).filter(func(nft) { nft != null }).map(func(nft) { nft.unwrap() });
+        ownedNFTs;
       };
     };
   };
 
+  // Only authenticated users can count their own NFTs
   public query ({ caller }) func countMyNFTs() : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can count their NFTs");
     };
-
     switch (userNFTs.get(caller)) {
       case (null) { 0 };
       case (?tokenIds) { tokenIds.size() };
     };
   };
-};
+});
