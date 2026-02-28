@@ -2,26 +2,26 @@ import React, { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useIsCallerAdminWithTimeout } from '../hooks/useIsCallerAdminWithTimeout';
-import { useActor } from '../hooks/useActor';
 import AdminCollectionList from '../components/AdminCollectionList';
 import AdminNFTList from '../components/AdminNFTList';
 import AdminCollectionForm from '../components/AdminCollectionForm';
 import AdminNFTForm from '../components/AdminNFTForm';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShieldCheck, RefreshCw, LogIn, Loader2, Clock, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, RefreshCw, LogIn, Loader2, Clock, AlertTriangle, Wifi } from 'lucide-react';
 import type { NFTItem } from '../backend';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { identity, isInitializing, login } = useInternetIdentity();
-  const { isFetching: actorFetching } = useActor();
-  const { isAdmin, isLoading, timedOut, error, retry } = useIsCallerAdminWithTimeout(20000);
+  // Use a generous timeout (60s) to handle cold-start IC canister delays
+  const { isAdmin, isLoading, timedOut, error, retry, actorWaiting } =
+    useIsCallerAdminWithTimeout(60000);
 
   const [editingNFT, setEditingNFT] = useState<NFTItem | null>(null);
   const [showNFTForm, setShowNFTForm] = useState(false);
 
-  const isAuthenticated = !!identity;
+  const isAuthenticated = !!identity && !identity.getPrincipal().isAnonymous();
 
   const handleEditNFT = (nft: NFTItem) => {
     setEditingNFT(nft);
@@ -34,18 +34,13 @@ export default function AdminDashboard() {
     setShowNFTForm(false);
   };
 
-  // Still initializing identity or actor
-  if (isInitializing || (isAuthenticated && actorFetching && isLoading)) {
+  // Still initializing identity
+  if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground font-sans">
-            {isInitializing ? 'Initialisierung…' : 'Verbindung wird hergestellt…'}
-          </p>
-          <p className="text-muted-foreground/60 font-sans text-xs">
-            Dies kann in der Produktionsumgebung einige Sekunden dauern.
-          </p>
+          <p className="text-muted-foreground font-sans">Initialisierung…</p>
         </div>
       </div>
     );
@@ -74,7 +69,28 @@ export default function AdminDashboard() {
     );
   }
 
-  // Loading / checking admin status
+  // Waiting for actor to initialize (backend connection)
+  if (isLoading && actorWaiting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4 max-w-sm mx-auto px-4">
+          <Wifi className="h-10 w-10 animate-pulse text-primary mx-auto" />
+          <p className="text-foreground font-sans font-medium">Verbindung wird hergestellt…</p>
+          <p className="text-muted-foreground font-sans text-xs">
+            Die Verbindung zum Internet Computer kann beim ersten Start einige Sekunden dauern.
+          </p>
+          <div className="flex justify-center pt-2">
+            <Button variant="outline" size="sm" onClick={retry} className="gap-2">
+              <RefreshCw className="h-3 w-3" />
+              Neu versuchen
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Checking admin status
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -82,15 +98,15 @@ export default function AdminDashboard() {
           <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground font-sans">Berechtigungen werden geprüft…</p>
           <p className="text-muted-foreground/60 font-sans text-xs">
-            Dies kann in der Produktionsumgebung einige Sekunden dauern.
+            Dies kann beim ersten Start einige Sekunden dauern.
           </p>
         </div>
       </div>
     );
   }
 
-  // Timed out
-  if (timedOut && !isAdmin) {
+  // Timed out — show retry, but don't block if it was just slow
+  if (timedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-6 max-w-sm mx-auto px-4">
@@ -100,7 +116,8 @@ export default function AdminDashboard() {
               Zeitüberschreitung
             </h2>
             <p className="text-muted-foreground font-sans text-sm">
-              Die Verbindung zum Backend hat zu lange gedauert. Bitte versuchen Sie es erneut.
+              Die Verbindung zum Backend hat länger als erwartet gedauert. Bitte versuchen Sie es
+              erneut.
             </p>
           </div>
           <div className="flex gap-3 justify-center">

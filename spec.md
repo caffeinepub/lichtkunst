@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the Admin Dashboard infinite loading state that occurs after a successful Internet Identity login in production.
+**Goal:** Fix the Admin Dashboard backend connection timeout caused by a race condition between Internet Identity login and the admin status check.
 
 **Planned changes:**
-- Investigate and fix the `useIsCallerAdminWithTimeout` hook (or its usage) to resolve the race condition/timeout issue causing the page to never exit the loading state
-- Ensure the backend actor used for the admin check is instantiated with the authenticated identity, not anonymously
-- Add proper sequencing so the `isCallerAdmin` backend call only fires once the authenticated actor is fully ready
-- Replace infinite spinner behavior with a clear error message or retry option if the admin check fails or times out
+- Update `useIsCallerAdminWithTimeout` hook to only trigger the `isCallerAdmin` query after the authenticated actor is fully ready, eliminating the race condition with Internet Identity login
+- Ensure the backend actor always uses the authenticated identity when the user is logged in, never falling back to anonymous identity for admin-gated calls
+- Add a retry mechanism to the admin status check so at least one retry is attempted before showing a timeout error
+- Update `AdminDashboard.tsx` to coordinate actor readiness with the admin check, preventing the timeout error screen from appearing during normal authenticated login flow
 
-**User-visible outcome:** After logging in with Internet Identity, the Admin Dashboard loads correctly and displays the admin tabs (collections, NFT items) instead of spinning indefinitely.
+**User-visible outcome:** After logging in via Internet Identity, the Admin Dashboard loads successfully without showing the "Die Verbindung zum Backend hat zu lange gedauert" timeout error message.

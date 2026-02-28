@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T22:18:33.571Z",
+  "generatedAt": "2026-02-28T13:50:07.520Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,18 +12,20 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Fix the Admin Dashboard page so it no longer hangs indefinitely after a successful Internet Identity login. The page currently shows an infinite loading state instead of rendering the admin tabs. Investigate and resolve the race condition or timeout issue in the admin authentication check (useIsCallerAdminWithTimeout) that causes the page to never transition out of the loading state in production.",
+        "summary": "Fix the Admin Dashboard access failure caused by backend connection timeout. The `useIsCallerAdminWithTimeout` hook and the actor initialization in `useActor.ts` must be coordinated so that the admin status check only fires after the authenticated actor is fully ready. Eliminate any race condition between Internet Identity login completion and the admin check query being enabled.",
         "status": "implemented",
         "plannedFiles": [
+          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "frontend/src/pages/AdminDashboard.tsx"
         ],
         "matchedFiles": [
+          "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "frontend/src/pages/AdminDashboard.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Ensure the backend actor used in the Admin Dashboard is created with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. If the actor is being instantiated before the identity is fully available, add proper sequencing so the admin check only fires once an authenticated actor is ready.",
+        "summary": "Ensure the backend actor in `useActor.ts` is always instantiated using the authenticated Internet Identity principal when the user is logged in. The actor must not fall back to an anonymous identity while an authenticated identity is available, which would cause admin-gated backend calls to fail silently or time out.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"

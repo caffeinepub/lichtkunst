@@ -1,59 +1,53 @@
 {
   "kind": "build_request",
-  "title": "Fix Admin Dashboard infinite loading after Internet Identity login",
+  "title": "Fix Admin Dashboard backend connection timeout",
+  "projectName": "Istvan Seidel Portfolio",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the Admin Dashboard page so it no longer hangs indefinitely after a successful Internet Identity login. The page currently shows an infinite loading state instead of rendering the admin tabs. Investigate and resolve the race condition or timeout issue in the admin authentication check (useIsCallerAdminWithTimeout) that causes the page to never transition out of the loading state in production.",
+      "text": "Fix the Admin Dashboard access failure caused by backend connection timeout. The `useIsCallerAdminWithTimeout` hook and the actor initialization in `useActor.ts` must be coordinated so that the admin status check only fires after the authenticated actor is fully ready. Eliminate any race condition between Internet Identity login completion and the admin check query being enabled.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "Es passiert einfach nichts, die Seite lädt ewig.",
-          "Ja, ich bin eingeloggt mit Internet Identity."
+          "kein Zugang zum Adminbereich, Fehlermeldung: Zeitüberschreitung",
+          "Die Verbindung zum Backend hat zu lange gedauert. Bitte versuchen Sie es erneut."
         ]
       },
       "acceptanceCriteria": [
-        "After a successful Internet Identity login, navigating to the Admin Dashboard no longer shows an infinite loading spinner.",
-        "If the user is an admin, the admin tabs (collections, NFT items) are rendered correctly.",
-        "If the admin check call to the backend fails or times out, a clear error message or retry option is shown instead of an infinite spinner.",
-        "The fix works in the production (deployed) environment, not just local development."
+        "After logging in via Internet Identity, the Admin Dashboard loads successfully without showing the timeout error message.",
+        "The admin status check (`isCallerAdmin`) is only initiated after the authenticated actor instance is confirmed ready.",
+        "If the backend call genuinely takes longer than expected, a retry mechanism attempts the request at least once before showing an error.",
+        "The timeout error screen ('Die Verbindung zum Backend hat zu lange gedauert') is not shown during normal authenticated admin login flow."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure the backend actor used in the Admin Dashboard is created with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. If the actor is being instantiated before the identity is fully available, add proper sequencing so the admin check only fires once an authenticated actor is ready.",
+      "text": "Ensure the backend actor in `useActor.ts` is always instantiated using the authenticated Internet Identity principal when the user is logged in. The actor must not fall back to an anonymous identity while an authenticated identity is available, which would cause admin-gated backend calls to fail silently or time out.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-5"
-        ],
-        "quotes": [
-          "Es passiert einfach nichts, die Seite lädt ewig.",
-          "Ja, ich bin eingeloggt mit Internet Identity."
+          "msg-1"
         ]
       },
       "acceptanceCriteria": [
-        "The isCallerAdmin backend call is only triggered after both the Internet Identity login is complete and an authenticated actor instance is available.",
-        "No unauthenticated (anonymous) actor call is made for the admin check when the user is logged in.",
-        "The AdminDashboard does not enter an infinite loading state due to the actor not being ready."
+        "When a user is authenticated via Internet Identity, all backend calls in the admin area use the authenticated actor, not the anonymous one.",
+        "The actor is re-created and queries are invalidated whenever the identity changes (login/logout).",
+        "No admin backend call is made with an anonymous principal."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts — treat them as read-only.",
-    "Do not change the backend Motoko actor logic or admin authorization rules.",
-    "Preserve all existing admin UI functionality (collection management, NFT management tabs)."
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui — these are read-only. Implement fixes via wrapper hooks or updates to useIsCallerAdminWithTimeout.ts and AdminDashboard.tsx instead.",
+    "Do not change the backend Motoko actor schema or role-based access control logic."
   ],
   "nonGoals": [
-    "Adding new admin features or changing the admin UI layout.",
-    "Changing the Internet Identity authentication flow.",
-    "Modifying backend access control or principal management."
+    "Adding new admin features or dashboard UI changes beyond fixing the timeout/access issue.",
+    "Changes to NFT minting, collection management, or blog post functionality.",
+    "Backend Motoko code changes."
   ],
   "imageRequirements": {
     "required": [],
