@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-the-navigation-component-fix-the-admin-button-flashing-behavior-by-adding-a-hardcoded-principal-fallback-if-the-authenticated-principal-matches-the-owner-s-known-principal-treat-the-user-as-admin-regardless-of-the-backend-iscalleradmin-call-result-this-ensures-the-admin-link-is-shown-even-if-the-backend-call-is-slow-or-fails",
-      "featureTitle": "In the Navigation component, fix the admin button flashing behavior by adding a hardcoded principal fallback: if the authenticated principal matches the owner's known principal, treat the user as admin regardless of the backend `isCallerAdmin` call result. This ensures the Admin link is shown even if the backend call is slow or fails.",
+      "featureId": "feature-reduce-the-border-widths-on-the-gallery-page-further-they-must-be-noticeably-thinner-than-the-current-state-e-g-1px-or-0-5px-instead-of-the-current-value",
+      "featureTitle": "Reduce the border widths on the Gallery page further — they must be noticeably thinner than the current state (e.g. 1px or 0.5px instead of the current value).",
       "files": [
-        "frontend/src/components/Navigation.tsx"
+        "frontend/src/pages/Gallery.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -22,11 +22,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-in-useiscalleradmin-ts-and-or-useiscalleradminwithtimeout-ts-suppress-the-loading-then-false-flash-hold-the-admin-ui-in-a-loading-indeterminate-state-do-not-render-the-button-as-hidden-until-the-backend-call-either-resolves-successfully-or-times-out-only-set-isadmin-false-after-a-definitive-response-or-timeout-not-during-initial-load",
-      "featureTitle": "In `useIsCallerAdmin.ts` and/or `useIsCallerAdminWithTimeout.ts`, suppress the loading-then-false flash: hold the admin UI in a 'loading/indeterminate' state (do not render the button as hidden) until the backend call either resolves successfully or times out. Only set `isAdmin = false` after a definitive response or timeout, not during initial load.",
+      "featureId": "feature-make-the-quote-text-on-the-gallery-page-lighter-in-font-weight-e-g-font-weight-300-or-400-and-switch-it-to-a-serif-typeface-use-the-already-loaded-playfair-display-font",
+      "featureTitle": "Make the quote text on the Gallery page lighter in font weight (e.g. font-weight: 300 or 400) and switch it to a serif typeface (use the already-loaded Playfair Display font).",
       "files": [
-        "frontend/src/components/Navigation.tsx",
-        "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
+        "frontend/src/pages/Gallery.tsx"
       ],
       "components": [
         "authorization@4.0.0",

@@ -56,7 +56,7 @@ const NFT_COLLECTIONS = [
 
 export default function NFTCollectionsSection() {
   return (
-    <section className="border-y border-border/40 bg-gradient-to-b from-background via-muted/20 to-background py-6">
+    <section className="border-y border-border/20 bg-gradient-to-b from-background via-muted/20 to-background py-6">
       <div className="container mx-auto px-4">
         <div className="mb-6 text-center">
           <div className="mb-1 flex items-center justify-center gap-2">

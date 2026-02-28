@@ -1,10 +1,7 @@
-import React, { useState } from 'react';
-import { NFTCollection } from '../backend';
+import { useState } from 'react';
 import { useGetAllCollections } from '../hooks/useGetAllCollections';
 import { useDeleteCollection } from '../hooks/useDeleteCollection';
-import AdminCollectionForm from './AdminCollectionForm';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
@@ -17,129 +14,137 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Pencil, Trash2, FolderOpen, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import AdminCollectionForm from './AdminCollectionForm';
 import { toast } from 'sonner';
+import type { NFTCollection } from '../backend';
+import { Pencil, Trash2, FolderOpen } from 'lucide-react';
 
 export default function AdminCollectionList() {
-  const { data: collections = [], isLoading } = useGetAllCollections();
-  const { mutateAsync: deleteCollection, isPending: isDeleting } = useDeleteCollection();
+  const { data: collections, isLoading, error } = useGetAllCollections();
+  const deleteMutation = useDeleteCollection();
   const [editingCollection, setEditingCollection] = useState<NFTCollection | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleDelete = async (id: string) => {
-    setDeletingId(id);
     try {
-      await deleteCollection(id);
-      toast.success('Kollektion erfolgreich gelöscht');
-    } catch (err: any) {
-      toast.error(err?.message ?? 'Fehler beim Löschen der Kollektion.');
-    } finally {
-      setDeletingId(null);
+      await deleteMutation.mutateAsync(id);
+      toast.success('Kollektion gelöscht.');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      toast.error(`Fehler beim Löschen: ${msg}`);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-20 w-full rounded-lg" />
+          <Skeleton key={i} className="h-14 w-full rounded-lg" />
         ))}
       </div>
     );
   }
 
-  if (collections.length === 0) {
+  if (error) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-40" />
+      <p className="text-destructive text-sm">
+        Fehler beim Laden der Kollektionen: {error instanceof Error ? error.message : 'Unbekannter Fehler'}
+      </p>
+    );
+  }
+
+  if (!collections || collections.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <FolderOpen className="mx-auto h-10 w-10 mb-2 opacity-40" />
         <p className="text-sm">Noch keine Kollektionen vorhanden.</p>
-        <p className="text-xs mt-1">Erstellen Sie Ihre erste Kollektion mit dem Formular oben.</p>
+        <p className="text-xs mt-1">Erstelle deine erste Kollektion mit dem Formular oben.</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="space-y-3">
-        {collections.map((col) => (
-          <Card key={col.id} className="border border-border">
-            <CardContent className="py-4 px-5 flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-sm truncate">{col.name}</h3>
-                {col.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{col.description}</p>
-                )}
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  ID: <span className="font-mono">{col.id}</span>
-                </p>
-              </div>
-              <div className="flex gap-2 shrink-0">
+    <div className="space-y-2">
+      {collections.map((collection) => (
+        <div
+          key={collection.id}
+          className="flex items-center justify-between p-3 rounded-lg border border-border bg-card"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-sm truncate">{collection.name}</p>
+            <p className="text-xs text-muted-foreground truncate">{collection.id}</p>
+            {collection.description && (
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{collection.description}</p>
+            )}
+          </div>
+          <div className="flex gap-1 ml-2 shrink-0">
+            <Dialog
+              open={editDialogOpen && editingCollection?.id === collection.id}
+              onOpenChange={(open) => {
+                setEditDialogOpen(open);
+                if (!open) setEditingCollection(null);
+              }}
+            >
+              <DialogTrigger asChild>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setEditingCollection(col)}
-                  title="Bearbeiten"
+                  onClick={() => {
+                    setEditingCollection(collection);
+                    setEditDialogOpen(true);
+                  }}
                 >
-                  <Pencil className="w-3.5 h-3.5" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      title="Löschen"
-                      disabled={isDeleting && deletingId === col.id}
-                    >
-                      {isDeleting && deletingId === col.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Kollektion löschen?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Möchten Sie die Kollektion „{col.name}" wirklich löschen? Alle zugehörigen NFTs werden
-                        ebenfalls gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onClick={() => handleDelete(col.id)}
-                      >
-                        Löschen
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Kollektion bearbeiten</DialogTitle>
+                </DialogHeader>
+                <AdminCollectionForm
+                  editingCollection={editingCollection}
+                  onDone={() => {
+                    setEditDialogOpen(false);
+                    setEditingCollection(null);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={!!editingCollection} onOpenChange={(open) => !open && setEditingCollection(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Kollektion bearbeiten</DialogTitle>
-          </DialogHeader>
-          {editingCollection && (
-            <AdminCollectionForm
-              collection={editingCollection}
-              onSuccess={() => setEditingCollection(null)}
-              onCancel={() => setEditingCollection(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Kollektion löschen?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Die Kollektion „{collection.name}" und alle zugehörigen NFTs werden unwiderruflich gelöscht.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDelete(collection.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Löschen
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

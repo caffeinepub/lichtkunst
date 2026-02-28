@@ -1,7 +1,5 @@
-import React from 'react';
-import { ExternalLink, Coins } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import type { NFTItem, NFTCollection } from '@/backend';
+import type { NFTCollection, NFTItem } from '../backend';
+import { ExternalLink } from 'lucide-react';
 
 interface NFTCardProps {
   nft: NFTItem;
@@ -11,76 +9,58 @@ interface NFTCardProps {
 }
 
 export default function NFTCard({ nft, collection, canisterId, onClick }: NFTCardProps) {
-  const imageUrl = nft.imageData.getDirectURL();
-  const priceICP = nft.price != null ? (Number(nft.price) / 1e8).toFixed(2) : null;
+  const imageUrl = nft.imageData?.getDirectURL?.() ?? '';
 
   const explorerUrl =
     canisterId && nft.tokenId != null
       ? `https://dashboard.internetcomputer.org/canister/${canisterId}`
+      : nft.tokenId != null
+      ? `https://dashboard.internetcomputer.org/token/${nft.tokenId}`
       : null;
 
   return (
     <div
-      className="group bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+      className={`group rounded-xl overflow-hidden border border-border/50 bg-card shadow-sm transition-all duration-200 hover:shadow-md hover:border-border ${onClick ? 'cursor-pointer' : ''}`}
       onClick={() => onClick?.(nft)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.(nft);
-        }
-      }}
-      aria-label={`NFT ansehen: ${nft.title}`}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(nft); } } : undefined}
+      aria-label={onClick ? `NFT ansehen: ${nft.title}` : undefined}
     >
-      <div className="relative overflow-hidden aspect-square bg-muted">
+      <div className="aspect-square overflow-hidden bg-muted">
         {imageUrl ? (
           <img
             src={imageUrl}
             alt={nft.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
             Kein Bild
           </div>
         )}
-        {nft.tokenId != null && (
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-accent/90 text-accent-foreground text-xs backdrop-blur-sm">
-              On-Chain
-            </Badge>
-          </div>
-        )}
       </div>
-
-      <div className="p-4 space-y-2">
-        <h3 className="font-serif text-base font-medium leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-          {nft.title}
-        </h3>
-
+      <div className="p-3">
+        <h3 className="font-medium text-sm truncate">{nft.title}</h3>
         {collection && (
-          <p className="text-xs text-muted-foreground">{collection.name}</p>
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{collection.name}</p>
         )}
-
-        <div className="flex items-center justify-between pt-1">
-          {priceICP && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Coins className="w-3 h-3" />
-              <span>{priceICP} ICP</span>
-            </div>
+        <div className="flex items-center justify-between mt-2">
+          {nft.price > 0n && (
+            <span className="text-xs font-medium text-primary">
+              {nft.price.toString()} ICP
+            </span>
           )}
-
-          {nft.tokenId != null && explorerUrl && (
+          {explorerUrl && (
             <a
               href={explorerUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className="text-muted-foreground hover:text-primary transition-colors"
-              title="Im ICP Explorer ansehen"
+              title="ICP Explorer"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>

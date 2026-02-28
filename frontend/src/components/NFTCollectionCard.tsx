@@ -41,7 +41,7 @@ export default function NFTCollectionCard({
       className="group block"
       aria-label={`${title} NFT Kollektion kaufen und handeln`}
     >
-      <Card className="group cursor-pointer overflow-hidden border-border/50 bg-card/50 backdrop-blur transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/20">
+      <Card className="group cursor-pointer overflow-hidden border border-border/20 bg-card/50 backdrop-blur transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-primary/20">
         <div className="relative h-24 overflow-hidden bg-accent/20">
           {displayImageUrl && !imageError ? (
             <>

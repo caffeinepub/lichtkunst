@@ -1,11 +1,10 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the admin button flashing and disappearing behavior in the Navigation component on the live canister.
+**Goal:** Refine the Gallery page's visual styling by thinning borders and lightening the quote text with a serif font.
 
 **Planned changes:**
-- Add a hardcoded principal fallback in the Navigation component so the known admin principal always sees the Admin link, even if the backend `isCallerAdmin` call is slow or fails
-- Update `useIsCallerAdmin.ts` and/or `useIsCallerAdminWithTimeout.ts` to hold the admin UI in an indeterminate/loading state during the backend call, only hiding the Admin button after a definitive `false` response or timeout
-- Verify that the `isCallerAdmin` method in `backend/main.mo` is public and correctly returns `true` for the admin principal on the live canister
+- Reduce all border/outline widths on the Gallery page to 1px or less (noticeably thinner than current)
+- Change the quote text font to Playfair Display (serif) with a lighter font weight (300 or 400)
 
-**User-visible outcome:** The Admin navigation link no longer flashes or disappears on page load for the admin user; it remains visible while authentication is resolved and only hides for non-admin users after a confirmed response.
+**User-visible outcome:** On the Gallery page, borders appear noticeably thinner and the quote text is displayed in a lighter-weight serif typeface, while all other pages and elements remain unchanged.

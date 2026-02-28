@@ -1,91 +1,76 @@
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import type { NFT } from '../backend';
 import { User } from 'lucide-react';
-import type { NFT } from '@/backend';
-import { shortenPrincipal } from '@/utils/formatPrincipal';
 
 interface IssuedNFTCardProps {
   nft: NFT;
-  onClick?: (nft: NFT) => void;
-  /** Highlight this card if the owner matches the current user */
   isOwn?: boolean;
 }
 
-export default function IssuedNFTCard({ nft, onClick, isOwn = false }: IssuedNFTCardProps) {
-  const imageUrl = nft.metadata.image.getDirectURL();
-  const mintDate = new Date(Number(nft.mintedAt) / 1_000_000).toLocaleDateString('de-DE', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-  const ownerShort = shortenPrincipal(nft.owner.toString(), 8, 4);
+export default function IssuedNFTCard({ nft, isOwn }: IssuedNFTCardProps) {
+  const imageUrl = nft.metadata?.image?.getDirectURL?.() ?? '';
+  const mintDate = nft.mintedAt
+    ? new Date(Number(nft.mintedAt) / 1_000_000).toLocaleDateString('de-DE', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null;
+
+  const ownerStr = nft.owner?.toString() ?? '';
+  const shortOwner = ownerStr.length > 12
+    ? `${ownerStr.slice(0, 6)}…${ownerStr.slice(-4)}`
+    : ownerStr;
 
   return (
     <div
-      className={`group bg-card border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${
-        isOwn ? 'border-primary/50 ring-1 ring-primary/20' : 'border-border'
+      className={`group rounded-xl overflow-hidden border bg-card shadow-sm transition-all duration-200 hover:shadow-md ${
+        isOwn ? 'border-primary/50 ring-1 ring-primary/30' : 'border-border/50'
       }`}
-      onClick={() => onClick?.(nft)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick?.(nft);
-        }
-      }}
-      aria-label={`NFT ansehen: ${nft.metadata.title}`}
     >
-      <div className="relative overflow-hidden aspect-square bg-muted">
+      <div className="relative aspect-square overflow-hidden bg-muted">
         {imageUrl ? (
           <img
             src={imageUrl}
-            alt={nft.metadata.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            alt={nft.metadata?.title ?? 'NFT'}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
             Kein Bild
           </div>
         )}
-        <div className="absolute top-2 left-2 flex gap-1.5">
-          <Badge className="bg-accent/90 text-accent-foreground text-xs backdrop-blur-sm">
+        {/* Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          <span className="text-[10px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
             On-Chain
-          </Badge>
+          </span>
           {isOwn && (
-            <Badge className="bg-primary/90 text-primary-foreground text-xs backdrop-blur-sm">
+            <span className="text-[10px] font-semibold bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full">
               Mein NFT
-            </Badge>
+            </span>
           )}
         </div>
-        <div className="absolute bottom-2 right-2">
-          <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-xs font-mono">
-            #{nft.tokenId.toString()}
-          </Badge>
+        {/* Token ID badge */}
+        <div className="absolute top-2 right-2">
+          <span className="text-[10px] font-mono bg-black/60 text-white px-1.5 py-0.5 rounded">
+            #{nft.tokenId?.toString()}
+          </span>
         </div>
       </div>
-
-      <div className="p-4 space-y-2">
-        <h3 className="font-serif text-base font-medium leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-          {nft.metadata.title}
-        </h3>
-
-        {nft.metadata.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{nft.metadata.description}</p>
+      <div className="p-3">
+        <h3 className="font-medium text-sm truncate">{nft.metadata?.title ?? 'Unbekannt'}</h3>
+        {nft.metadata?.description && (
+          <p className="text-xs text-muted-foreground truncate mt-0.5">{nft.metadata.description}</p>
         )}
-
-        <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
-          <span className="font-mono font-medium">Token #{nft.tokenId.toString()}</span>
-          <span>{mintDate}</span>
-        </div>
-
-        <div
-          className="flex items-center gap-1 text-xs text-muted-foreground font-mono truncate"
-          title={nft.owner.toString()}
-        >
-          <User className="w-3 h-3 shrink-0" />
-          <span className="truncate">{ownerShort}</span>
-        </div>
+        {mintDate && (
+          <p className="text-xs text-muted-foreground mt-1">{mintDate}</p>
+        )}
+        {ownerStr && (
+          <div className="flex items-center gap-1 mt-1.5">
+            <User className="h-3 w-3 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground font-mono truncate">{shortOwner}</span>
+          </div>
+        )}
       </div>
     </div>
   );

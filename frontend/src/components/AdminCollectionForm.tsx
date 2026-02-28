@@ -1,115 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { NFTCollection } from '../backend';
-import { useCreateCollection } from '../hooks/useCreateCollection';
-import { useUpdateCollection } from '../hooks/useUpdateCollection';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { useCreateCollection } from '../hooks/useCreateCollection';
+import { useUpdateCollection } from '../hooks/useUpdateCollection';
 import { toast } from 'sonner';
+import type { NFTCollection } from '../backend';
+import { Loader2 } from 'lucide-react';
 
 interface AdminCollectionFormProps {
-  collection?: NFTCollection;
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  editingCollection?: NFTCollection | null;
+  onDone?: () => void;
 }
 
-export default function AdminCollectionForm({ collection, onSuccess, onCancel }: AdminCollectionFormProps) {
-  const { mutateAsync: createCollection, isPending: isCreating } = useCreateCollection();
-  const { mutateAsync: updateCollection, isPending: isUpdating } = useUpdateCollection();
+export default function AdminCollectionForm({ editingCollection, onDone }: AdminCollectionFormProps) {
+  const [id, setId] = useState(editingCollection?.id ?? '');
+  const [name, setName] = useState(editingCollection?.name ?? '');
+  const [description, setDescription] = useState(editingCollection?.description ?? '');
 
-  const [name, setName] = useState(collection?.name ?? '');
-  const [description, setDescription] = useState(collection?.description ?? '');
-  const [error, setError] = useState<string | null>(null);
+  const createMutation = useCreateCollection();
+  const updateMutation = useUpdateCollection();
 
-  const isEditing = !!collection;
-  const isPending = isCreating || isUpdating;
-
-  useEffect(() => {
-    if (collection) {
-      setName(collection.name);
-      setDescription(collection.description);
-    }
-  }, [collection]);
+  const isEditing = !!editingCollection;
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
-    if (!name.trim()) {
-      setError('Bitte geben Sie einen Namen für die Kollektion ein.');
+    if (!id.trim() || !name.trim()) {
+      toast.error('ID und Name sind Pflichtfelder.');
       return;
     }
 
     try {
-      if (isEditing && collection) {
-        await updateCollection({ id: collection.id, name: name.trim(), description: description.trim() });
-        toast.success('Kollektion erfolgreich aktualisiert');
+      if (isEditing) {
+        await updateMutation.mutateAsync({ id: id.trim(), name: name.trim(), description: description.trim() });
+        toast.success('Kollektion erfolgreich aktualisiert.');
       } else {
-        const id = `col-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        await createCollection({ id, name: name.trim(), description: description.trim() });
-        toast.success('Kollektion erfolgreich erstellt');
+        await createMutation.mutateAsync({ id: id.trim(), name: name.trim(), description: description.trim() });
+        toast.success('Kollektion erfolgreich erstellt.');
+        setId('');
         setName('');
         setDescription('');
       }
-      onSuccess?.();
-    } catch (err: any) {
-      const msg = err?.message ?? 'Fehler beim Speichern der Kollektion.';
-      setError(msg);
-      toast.error(msg);
+      onDone?.();
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.includes('Unauthorized') || msg.includes('Only admins') || msg.includes('Keine Berechtigung')) {
+        toast.error('Keine Berechtigung: Nur Admins können Kollektionen verwalten.');
+      } else if (msg.includes('Actor nicht verfügbar')) {
+        toast.error('Verbindung zum Backend nicht möglich. Bitte erneut anmelden.');
+      } else {
+        toast.error(`Fehler: ${msg}`);
+      }
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="col-name">Name *</Label>
+      {!isEditing && (
+        <div className="space-y-1">
+          <Label htmlFor="collection-id">ID (eindeutig)</Label>
+          <Input
+            id="collection-id"
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            placeholder="z.B. lichtei-2024"
+            disabled={isPending}
+            required
+          />
+        </div>
+      )}
+      <div className="space-y-1">
+        <Label htmlFor="collection-name">Name</Label>
         <Input
-          id="col-name"
+          id="collection-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="z.B. Tafelmalerei"
+          placeholder="Kollektionsname"
+          disabled={isPending}
           required
         />
       </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="col-description">Beschreibung (optional)</Label>
+      <div className="space-y-1">
+        <Label htmlFor="collection-description">Beschreibung</Label>
         <Textarea
-          id="col-description"
+          id="collection-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Kurze Beschreibung der Kollektion..."
+          placeholder="Kurze Beschreibung der Kollektion"
+          disabled={isPending}
           rows={3}
         />
       </div>
-
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
       <div className="flex gap-2 justify-end">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
+        {onDone && (
+          <Button type="button" variant="outline" onClick={onDone} disabled={isPending}>
             Abbrechen
           </Button>
         )}
-        <Button type="submit" disabled={isPending || !name.trim()}>
-          {isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              {isEditing ? 'Wird aktualisiert...' : 'Wird erstellt...'}
-            </>
-          ) : isEditing ? (
-            'Kollektion aktualisieren'
-          ) : (
-            'Kollektion erstellen'
-          )}
+        <Button type="submit" disabled={isPending}>
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isEditing ? 'Aktualisieren' : 'Kollektion erstellen'}
         </Button>
       </div>
     </form>

@@ -1,93 +1,56 @@
-import React from 'react';
-import { useGetAllCollections } from '../hooks/useGetAllCollections';
-import { useGetAllNFTs } from '../hooks/useGetAllNFTs';
-import { useActor } from '../hooks/useActor';
+import { Link } from '@tanstack/react-router';
 import NFTCollectionsSection from '../components/NFTCollectionsSection';
 import NFTExplanation from '../components/NFTExplanation';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
-
-const UZ_QUOTE = {
-  text: 'Das Licht ist die einzige Realität. Alles andere ist nur eine Erscheinung des Lichts.',
-  attribution: 'Walter Russell',
-};
 
 export default function Gallery() {
-  const { isFetching: actorFetching } = useActor();
-  const { isLoading: collectionsLoading, error: collectionsError, refetch: refetchCollections } = useGetAllCollections();
-  const { isLoading: nftsLoading, error: nftsError, refetch: refetchNFTs } = useGetAllNFTs();
-
-  const isLoading = actorFetching || collectionsLoading || nftsLoading;
-  const hasError = collectionsError || nftsError;
-
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Banner — quarter-height (half of previous 40vh) */}
-      <section className="relative h-[20vh] min-h-[110px] max-h-[210px] overflow-hidden">
+    <main className="min-h-screen bg-background">
+      {/* Hero Banner */}
+      <section className="relative h-[20vh] min-h-[140px] overflow-hidden">
         <img
           src="/assets/generated/hero-light-art.dim_1920x1080.png"
           alt="Lichtkunst von Istvan Seidel"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover"
         />
-        {/* Subtle gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/30" />
-      </section>
-
-      {/* Single static UZ quote */}
-      <section className="py-10 px-4">
-        <div className="max-w-2xl mx-auto text-center">
-          <blockquote className="font-serif text-xl font-light text-muted-foreground italic leading-relaxed">
-            &bdquo;{UZ_QUOTE.text}&ldquo;
-          </blockquote>
-          <p className="mt-3 font-sans text-sm text-muted-foreground/60">
-            — {UZ_QUOTE.attribution}
-            <span className="ml-1 not-italic">(Geheimnis des Lichtes)</span>
-          </p>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-background/80" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+          <h1 className="font-serif text-3xl md:text-5xl font-thin tracking-widest text-white drop-shadow-lg uppercase">
+            Galerie
+          </h1>
         </div>
       </section>
 
-      {/* Error State */}
-      {hasError && !isLoading && (
-        <section className="py-8 px-4">
-          <div className="max-w-md mx-auto text-center space-y-4">
-            <AlertTriangle className="h-10 w-10 text-destructive mx-auto" />
-            <p className="text-muted-foreground font-sans text-sm">
-              Fehler beim Laden der Inhalte. Bitte versuchen Sie es erneut.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => { refetchCollections(); refetchNFTs(); }}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Erneut versuchen
-            </Button>
-          </div>
-        </section>
-      )}
+      {/* Quote Section */}
+      <section className="py-10 px-4 text-center max-w-2xl mx-auto">
+        <blockquote className="relative">
+          <span className="text-4xl text-primary/30 font-serif leading-none select-none">"</span>
+          <p className="font-serif text-lg md:text-xl italic text-foreground/60 font-thin leading-relaxed -mt-4">
+            Das Geheimnis des Lichtes ist das Geheimnis des Lebens selbst.
+          </p>
+          <footer className="mt-3 text-sm font-light text-muted-foreground tracking-wide font-sans">
+            — Walter Russell
+          </footer>
+        </blockquote>
+      </section>
 
-      {/* Loading skeletons for collections */}
-      {isLoading && (
-        <section className="py-8 px-4">
-          <div className="max-w-6xl mx-auto">
-            <Skeleton className="h-8 w-48 mb-6" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-64 rounded-lg" />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* NFT Collections */}
+      <NFTCollectionsSection />
 
-      {/* NFT Collections Section */}
-      {!isLoading && (
-        <>
-          <NFTCollectionsSection />
-          <NFTExplanation />
-        </>
-      )}
-    </div>
+      {/* NFT Explanation */}
+      <NFTExplanation />
+
+      {/* CTA */}
+      <section className="py-12 px-4 text-center">
+        <p className="text-muted-foreground mb-4 font-light">
+          Entdecke die digitale Kunstwelt von Istvan Seidel
+        </p>
+        <Link
+          to="/nft-galerie"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:bg-primary/90 transition-colors"
+        >
+          NFT Galerie öffnen
+        </Link>
+      </section>
+    </main>
   );
 }
