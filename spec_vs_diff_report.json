@@ -1,55 +1,30 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T23:10:27.173Z",
-  "summary": "The diff contains only two modified files: backend/main.mo (backend logic, no frontend changes) and project_state.json (a state tracking file listing all requirements as 'pending'). None of the five frontend/fullstack requirements (REQ-1 through REQ-5) appear to have been implemented — all are still marked as 'pending' in project_state.json, and no frontend files were modified.",
+  "generatedAt": "2026-03-01T13:41:29.496Z",
+  "summary": "The diff implements REQ-13 (frontend hook updates) fully. For REQ-12, the backend main.mo is modified but the diff does not show a migration.mo file being added or modified, and the backend changes use a different access control pattern (AccessControl module) rather than a stable variable with the hardcoded principal string — making it unclear whether the specific principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' is stored as the admin principal or how the migration path is provided.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Reduce all border and outline widths throughout the UI to half their current thickness across cards, buttons, inputs, modals, and any other bordered elements.",
-      "reason": "No frontend files were modified in the diff. The project_state.json lists this as 'pending'. No CSS/styling changes are present.",
-      "evidence": [
-        "project_state.json"
-      ]
+      "id": "REQ-12",
+      "requirement": "Provide a migration path in backend/migration.mo so the live canister state is overwritten with the admin principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' on the next upgrade without losing other data.",
+      "reason": "The diff shows no added or modified backend/migration.mo file. The requirement explicitly mandates a migration.mo run function that seeds or overwrites the admin principal field during canister upgrade.",
+      "evidence": []
     },
     {
-      "id": "REQ-2",
-      "requirement": "Rename the navigation label for the home/gallery route from 'Galerie' to 'Startseite' in the Navigation component and any other place this label appears in the UI.",
-      "reason": "No frontend files were modified. The Navigation component and related UI elements were not changed. project_state.json lists this as 'pending'.",
+      "id": "REQ-12",
+      "requirement": "The stored admin principal in the stable variable must be exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae', with isCallerAdmin comparing caller.toText() against this string.",
+      "reason": "The diff shows backend/main.mo using an AccessControl module (AccessControl.isAdmin, AccessControl.hasPermission) rather than directly comparing caller.toText() to the hardcoded principal string. There is no evidence in the diff that this specific principal is stored or used as the initialization default in a stable variable.",
       "evidence": [
-        "project_state.json"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "Remove the 'Galerie' text overlay/label rendered on top of the hero banner image on the Gallery/Startseite page.",
-      "reason": "No frontend files were modified. The Gallery/Startseite page component was not changed. project_state.json lists this as 'pending'.",
-      "evidence": [
-        "project_state.json"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "requirement": "Fix admin access control so that the authenticated admin user is correctly granted access to the Admin Dashboard, including fixes to useIsCallerAdminWithTimeout hook, principal normalization, and debug logging.",
-      "reason": "The backend/main.mo was modified but no changes to useIsCallerAdminWithTimeout, AdminDashboard, or related frontend hooks are present. project_state.json lists this as 'pending'. No console logging or UI messaging for debugging was added.",
-      "evidence": [
-        "project_state.json",
         "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Display the NFT canister/contract address (principal ID of the backend canister) visibly in the UI using the PrincipalDisplay component with copy-to-clipboard support.",
-      "reason": "No frontend files were modified. No PrincipalDisplay integration or canister address display was added. project_state.json lists this as 'pending'.",
-      "evidence": [
-        "project_state.json"
       ]
     }
   ],
   "hallucinated_features": [],
-  "confidence": 0.97,
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
     "project_state.json"
   ]
 }

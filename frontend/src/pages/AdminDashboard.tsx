@@ -1,17 +1,23 @@
 import { useState } from 'react';
 import { useIsCallerAdminWithTimeout } from '../hooks/useIsCallerAdminWithTimeout';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import AdminCollectionForm from '../components/AdminCollectionForm';
 import AdminCollectionList from '../components/AdminCollectionList';
 import AdminNFTForm from '../components/AdminNFTForm';
 import AdminNFTList from '../components/AdminNFTList';
+import PrincipalDisplay from '../components/PrincipalDisplay';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Loader2, AlertTriangle, RefreshCw, Clock, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import type { NFTItem } from '../backend';
 
 export default function AdminDashboard() {
   const { phase, isAdmin, retry } = useIsCallerAdminWithTimeout(90000);
+  const { identity } = useInternetIdentity();
   const [editingNFT, setEditingNFT] = useState<NFTItem | null>(null);
+
+  const callerPrincipal = identity?.getPrincipal().toString() ?? '';
 
   const handleEditNFT = (nft: NFTItem) => {
     setEditingNFT(nft);
@@ -22,7 +28,7 @@ export default function AdminDashboard() {
     setEditingNFT(null);
   };
 
-  // Loading states
+  // ── Loading: identity still initializing ──────────────────────────────────
   if (phase === 'initializing') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -34,6 +40,7 @@ export default function AdminDashboard() {
     );
   }
 
+  // ── Loading: waiting for actor to connect ─────────────────────────────────
   if (phase === 'waiting-for-actor') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -48,73 +55,113 @@ export default function AdminDashboard() {
     );
   }
 
+  // ── Loading: backend admin check in progress ──────────────────────────────
   if (phase === 'checking') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <Shield className="w-10 h-10 text-primary mx-auto animate-pulse" />
-          <p className="text-muted-foreground font-sans">Berechtigungen werden geprüft…</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === 'timed-out') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-6 max-w-md px-4">
-          <Clock className="w-12 h-12 text-amber-500 mx-auto" />
-          <div>
-            <h2 className="text-xl font-serif font-semibold mb-2">Zeitüberschreitung</h2>
-            <p className="text-muted-foreground font-sans text-sm">
-              Die Verbindung zum ICP-Netzwerk hat zu lange gedauert. Bitte versuche es erneut.
-            </p>
-          </div>
-          <Button onClick={retry} variant="outline" className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Erneut versuchen
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === 'error') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-6 max-w-md px-4">
-          <WifiOff className="w-12 h-12 text-destructive mx-auto" />
-          <div>
-            <h2 className="text-xl font-serif font-semibold mb-2">Verbindungsfehler</h2>
-            <p className="text-muted-foreground font-sans text-sm">
-              Die Admin-Prüfung ist fehlgeschlagen. Bitte überprüfe deine Verbindung und versuche
-              es erneut.
-            </p>
-          </div>
-          <Button onClick={retry} variant="outline" className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Erneut versuchen
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === 'not-admin' || !isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4 max-w-md px-4">
-          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
-          <h2 className="text-xl font-serif font-semibold">Zugriff verweigert</h2>
-          <p className="text-muted-foreground font-sans text-sm">
-            Du hast keine Admin-Berechtigung für diesen Bereich.
+          <p className="text-muted-foreground font-sans">Überprüfe Admin-Berechtigung…</p>
+          <p className="text-xs text-muted-foreground/60 font-sans">
+            Backend-Anfrage läuft, bitte warten
           </p>
         </div>
       </div>
     );
   }
 
-  // phase === 'success' && isAdmin
+  // ── Error: timeout waiting for backend ────────────────────────────────────
+  if (phase === 'timeout') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <Clock className="w-12 h-12 text-amber-500 mx-auto mb-2" />
+            <CardTitle className="font-serif font-light">Zeitüberschreitung</CardTitle>
+            <CardDescription>
+              Die Verbindung zum ICP-Netzwerk hat zu lange gedauert. Bitte versuche es erneut.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            {callerPrincipal && (
+              <div className="w-full p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1 font-sans">Dein Principal:</p>
+                <PrincipalDisplay principal={callerPrincipal} shorten={false} />
+              </div>
+            )}
+            <Button onClick={retry} variant="outline" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Erneut versuchen
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Error: backend call failed ────────────────────────────────────────────
+  if (phase === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <WifiOff className="w-12 h-12 text-destructive mx-auto mb-2" />
+            <CardTitle className="font-serif font-light">Verbindungsfehler</CardTitle>
+            <CardDescription>
+              Die Admin-Prüfung ist fehlgeschlagen. Bitte überprüfe deine Verbindung und versuche
+              es erneut.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-4">
+            {callerPrincipal && (
+              <div className="w-full p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1 font-sans">Dein Principal:</p>
+                <PrincipalDisplay principal={callerPrincipal} shorten={false} />
+              </div>
+            )}
+            <Button onClick={retry} variant="outline" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Erneut versuchen
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Access denied: backend confirmed not-admin ────────────────────────────
+  if (phase === 'denied' || !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader className="text-center">
+            <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-2" />
+            <CardTitle className="font-serif font-light">Zugriff verweigert</CardTitle>
+            <CardDescription>
+              Admin-Zugriff wurde für diesen Principal verweigert. Nur der autorisierte
+              Admin-Principal kann auf diesen Bereich zugreifen.
+            </CardDescription>
+          </CardHeader>
+          {callerPrincipal && (
+            <CardContent className="flex flex-col items-center gap-3">
+              <div className="w-full p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1 font-sans">
+                  Zugriff verweigert für Principal:
+                </p>
+                <PrincipalDisplay principal={callerPrincipal} shorten={false} />
+              </div>
+              <p className="text-xs text-muted-foreground/70 font-sans text-center">
+                Kopiere deinen Principal und teile ihn mit dem Administrator, um Zugriff zu
+                erhalten.
+              </p>
+            </CardContent>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  // ── phase === 'confirmed' && isAdmin — render full dashboard ──────────────
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex items-center gap-3 mb-8">

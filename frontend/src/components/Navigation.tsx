@@ -19,17 +19,13 @@ export default function Navigation() {
 
   const { phase, isAdmin, retry } = useIsCallerAdminWithTimeout(30000);
 
-  // Only show the Admin link when the backend has definitively confirmed admin status.
-  // Do NOT show a loading placeholder — that causes the visible flash/disappear effect.
-  const showAdminLink = isAdmin && phase === 'success';
+  // The Admin link is ONLY shown when the backend has definitively confirmed admin=true.
+  // phase must be 'confirmed' AND isAdmin must be true — never shown during any loading phase.
+  // This prevents the flash-then-disappear bug on the live site.
+  const showAdminLink = phase === 'confirmed' && isAdmin;
 
   // Only show retry button on definitive failure states (not during loading)
-  const showRetry = isAuthenticated && (phase === 'timed-out' || phase === 'error');
-
-  // NOTE: The pulsing loading placeholder has been intentionally removed.
-  // It was the cause of the "flash then disappear" bug — it would appear briefly
-  // during the loading phase and then vanish when the backend returned not-admin or errored.
-  // Now we simply show nothing while loading, and only show the Admin link on confirmed success.
+  const showRetry = isAuthenticated && (phase === 'timeout' || phase === 'error');
 
   return (
     <TooltipProvider>

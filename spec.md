@@ -1,13 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Polish the UI with thinner borders, fix navigation labels, remove banner text overlay, fix admin access, and display the NFT canister address.
+**Goal:** Fix admin authorization so the live principal `uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae` is recognized as admin in both the backend canister and the frontend hook, eliminating the "Keine Berechtigung" error.
 
 **Planned changes:**
-- Reduce all border and outline widths to half their current thickness across cards, buttons, inputs, modals, and other bordered elements
-- Rename the navigation label for the home/gallery route from "Galerie" to "Startseite" everywhere it appears in the UI
-- Remove the "Galerie" text overlay rendered on top of the hero banner image on the Startseite page
-- Fix admin access control so the authenticated admin user is correctly granted access to the Admin Dashboard (normalize principal comparison, add debug logging)
-- Display the backend canister principal ID (NFT contract address) in the UI (footer or NFT Gallery page) using the PrincipalDisplay component with copy-to-clipboard support
+- In `backend/main.mo`, update the stable admin principal default to `uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae` and ensure `isCallerAdmin` compares `caller.toText()` against this value.
+- In `backend/migration.mo`, add/update the migration `run` function to overwrite the stored admin principal with the correct value on the next canister upgrade without losing any other stable state (collections, NFT items, user profiles, minted tokens).
+- In the frontend `useIsCallerAdminWithTimeout` hook, update the hardcoded fallback admin principal to `uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae`.
+- Ensure principal comparisons in the frontend hook use `.trim().toLowerCase()` on both sides.
+- Add `console.log` output in the hook showing the caller's principal, the hardcoded fallback, and the backend `isCallerAdmin` result for live diagnostics.
 
-**User-visible outcome:** The UI has thinner borders throughout, the home page nav link reads "Startseite" with no text on the hero banner, the admin user can access the Admin Dashboard without being denied, and the NFT canister address is visible and copyable in the UI.
+**User-visible outcome:** The admin user with principal `uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae` can access the Admin Dashboard and manage collections on the live site without seeing the "Keine Berechtigung" error.

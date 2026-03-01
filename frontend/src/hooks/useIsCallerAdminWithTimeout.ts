@@ -1,135 +1,126 @@
 import { useEffect, useRef, useState } from 'react';
-import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
+import { useActor } from './useActor';
 
-export type AdminCheckPhase =
+export type AdminPhase =
   | 'initializing'
   | 'waiting-for-actor'
   | 'checking'
-  | 'success'
-  | 'not-admin'
+  | 'confirmed'
+  | 'denied'
   | 'error'
-  | 'timed-out';
+  | 'timeout';
 
 export interface AdminCheckResult {
-  phase: AdminCheckPhase;
+  phase: AdminPhase;
   isAdmin: boolean;
   retry: () => void;
 }
 
-/**
- * TEMPORARY FALLBACK: Hardcoded admin principal.
- * If the backend isCallerAdmin() call fails or is slow, this principal
- * will always be treated as admin. Replace with your actual principal ID.
- * To find your principal: log in and check identity.getPrincipal().toString()
- */
-const HARDCODED_ADMIN_PRINCIPAL = ''; // TODO: Fill in your principal ID here
+const HARDCODED_ADMIN_PRINCIPAL = 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae';
+const DEFAULT_TIMEOUT_MS = 15000;
 
-/**
- * Admin check hook with timeout and phase state machine.
- * Uses a simple imperative approach to avoid React Query race conditions.
- * Includes a hardcoded principal fallback to prevent flash/disappear issues.
- */
-export function useIsCallerAdminWithTimeout(timeoutMs = 30000): AdminCheckResult {
-  const { actor, isFetching: actorFetching } = useActor();
+export function useIsCallerAdminWithTimeout(timeoutMs: number = DEFAULT_TIMEOUT_MS): AdminCheckResult {
   const { identity, isInitializing } = useInternetIdentity();
-
-  const [phase, setPhase] = useState<AdminCheckPhase>('initializing');
+  const { actor, isFetching: actorFetching } = useActor();
+  const [phase, setPhase] = useState<AdminPhase>('initializing');
   const [retryCount, setRetryCount] = useState(0);
-  const abortRef = useRef<AbortController | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkedRef = useRef(false);
 
-  const isAuthenticated = !!identity;
-  const isActorReady = !!actor && !actorFetching && !isInitializing;
-
-  // Check if current user matches the hardcoded admin principal fallback
-  const currentPrincipal = identity?.getPrincipal().toString() ?? '';
-  const isHardcodedAdmin =
-    HARDCODED_ADMIN_PRINCIPAL.length > 0 && currentPrincipal === HARDCODED_ADMIN_PRINCIPAL;
+  const retry = () => {
+    checkedRef.current = false;
+    setRetryCount(c => c + 1);
+    setPhase('initializing');
+  };
 
   useEffect(() => {
-    // Clear any previous abort/timeout
-    if (abortRef.current) abortRef.current.abort();
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    const abort = new AbortController();
-    abortRef.current = abort;
-
-    // If not authenticated, we can't be admin
-    if (!isInitializing && !isAuthenticated) {
-      setPhase('not-admin');
-      return;
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
 
-    // If the hardcoded principal matches, immediately grant admin — no backend call needed
-    if (isHardcodedAdmin && !isInitializing) {
-      setPhase('success');
-      return;
-    }
+    checkedRef.current = false;
 
-    // Still initializing identity
     if (isInitializing) {
       setPhase('initializing');
+      return;
     }
 
-    // Actor not ready yet
-    if (!isActorReady) {
-      if (!isInitializing) {
-        setPhase('waiting-for-actor');
-      }
+    if (!identity) {
+      setPhase('denied');
+      return;
+    }
 
-      // Set a timeout for actor readiness
+    const callerPrincipal = identity.getPrincipal().toString();
+    const normalizedCaller = callerPrincipal.trim().toLowerCase();
+    const normalizedHardcoded = HARDCODED_ADMIN_PRINCIPAL.trim().toLowerCase();
+
+    console.log('[AdminCheck] Caller principal:', callerPrincipal);
+    console.log('[AdminCheck] Hardcoded admin principal:', HARDCODED_ADMIN_PRINCIPAL);
+    console.log('[AdminCheck] Normalized caller:', normalizedCaller);
+    console.log('[AdminCheck] Normalized hardcoded:', normalizedHardcoded);
+    console.log('[AdminCheck] Principals match (hardcoded check):', normalizedCaller === normalizedHardcoded);
+
+    // Immediate hardcoded admin check — no backend call needed
+    if (normalizedCaller === normalizedHardcoded) {
+      console.log('[AdminCheck] ✅ Hardcoded admin match — granting admin access immediately');
+      setPhase('confirmed');
+      return;
+    }
+
+    // Not the hardcoded admin — proceed with backend check
+    if (actorFetching || !actor) {
+      setPhase('waiting-for-actor');
+
+      // Start timeout while waiting for actor
       timeoutRef.current = setTimeout(() => {
-        if (!abort.signal.aborted) {
-          setPhase('timed-out');
+        if (!checkedRef.current) {
+          console.warn('[AdminCheck] ⏱ Timeout waiting for actor');
+          setPhase('timeout');
         }
       }, timeoutMs);
-
-      return () => {
-        abort.abort();
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      };
+      return;
     }
 
-    // Actor is ready — perform the check
+    // Actor is ready — perform backend check
     setPhase('checking');
 
-    // Set overall timeout
+    const performCheck = async () => {
+      try {
+        console.log('[AdminCheck] Calling backend isCallerAdmin()...');
+        const result = await actor.isCallerAdmin();
+        checkedRef.current = true;
+        console.log('[AdminCheck] Backend isCallerAdmin() result:', result);
+        console.log('[AdminCheck] Final admin status:', result);
+        setPhase(result ? 'confirmed' : 'denied');
+      } catch (err) {
+        checkedRef.current = true;
+        console.error('[AdminCheck] Backend isCallerAdmin() error:', err);
+        setPhase('error');
+      }
+    };
+
+    // Set timeout for backend check
     timeoutRef.current = setTimeout(() => {
-      if (!abort.signal.aborted) {
-        abort.abort();
-        setPhase('timed-out');
+      if (!checkedRef.current) {
+        console.warn('[AdminCheck] ⏱ Timeout during backend isCallerAdmin() check');
+        setPhase('timeout');
       }
     }, timeoutMs);
 
-    (async () => {
-      try {
-        const result = await actor.isCallerAdmin();
-        if (abort.signal.aborted) return;
-        clearTimeout(timeoutRef.current!);
-        setPhase(result ? 'success' : 'not-admin');
-      } catch (err) {
-        if (abort.signal.aborted) return;
-        clearTimeout(timeoutRef.current!);
-        console.error('isCallerAdmin failed:', err);
-        setPhase('error');
-      }
-    })();
+    performCheck();
 
     return () => {
-      abort.abort();
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
-  }, [isActorReady, isAuthenticated, isInitializing, isHardcodedAdmin, retryCount, timeoutMs]);
+  }, [identity, isInitializing, actor, actorFetching, retryCount, timeoutMs]);
 
-  const retry = () => {
-    setPhase('initializing');
-    setRetryCount((c) => c + 1);
-  };
+  const isAdmin = phase === 'confirmed';
 
-  return {
-    phase,
-    isAdmin: phase === 'success',
-    retry,
-  };
+  return { phase, isAdmin, retry };
 }

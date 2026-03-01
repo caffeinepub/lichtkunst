@@ -1,93 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Thin borders, rename nav label, remove banner text, fix admin access, show NFT address",
+  "title": "Fix Frontend Admin Principal Check and Diagnostics",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Reduce all border and outline widths throughout the UI to half their current thickness",
+      "id": "REQ-13",
+      "summary": "Update frontend admin check hook to use correct hardcoded principal, normalize comparisons, and add diagnostic console logging",
       "acceptanceCriteria": [
-        "All visible borders and outlines appear visually half as thick as in version 59",
-        "No element retains its previous border width",
-        "Cards, inputs, modals, and buttons all reflect the thinner borders"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "modify",
-          "description": "Update global CSS custom properties and Tailwind utilities to reduce border widths by half. Change any 2px borders to 1px, 1px to 0.5px, and adjust border-related utility classes proportionally. This includes modifying border definitions in the base layer and component layer to ensure consistency across cards, buttons, inputs, modals, and other bordered elements."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Adjust the borderWidth theme configuration to define thinner default border widths (e.g., DEFAULT: '0.5px' instead of '1px'). Update any custom border width utilities to ensure all components using Tailwind border classes render with half the previous thickness."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Rename the navigation label for the home/gallery route from 'Galerie' to 'Startseite'",
-      "acceptanceCriteria": [
-        "The navigation link for the home/gallery page reads 'Startseite'",
-        "No other UI element labels this page 'Galerie' (except the NFT Gallery sub-page if it is a separate route)"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Navigation.tsx",
-          "operation": "modify",
-          "description": "Change the nav link label for the home/gallery route from 'Galerie' to 'Startseite'. Update the Link component text to display 'Startseite' while keeping the same route path. Ensure no other navigation elements continue to use 'Galerie' for the home page."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Remove the 'Galerie' text overlay from the hero banner on the Gallery/Startseite page",
-      "acceptanceCriteria": [
-        "The hero banner on the Gallery/Startseite page contains no 'Galerie' heading or text overlay",
-        "The banner image is otherwise unchanged"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Gallery.tsx",
-          "operation": "modify",
-          "description": "Remove the 'Galerie' text heading or overlay that appears on top of the hero banner image. Keep the banner image display intact (using frontend/public/assets/generated/hero-light-art.dim_1920x1080.png) but eliminate any text elements that overlay the image. The banner should render as a pure image without text labels."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Fix admin access control so the authenticated admin user is correctly granted access to the Admin Dashboard",
-      "acceptanceCriteria": [
-        "The logged-in admin user is granted access to the Admin Dashboard without being denied",
-        "The admin check resolves correctly and does not time out for the legitimate admin user",
-        "Non-admin users are still correctly denied access"
+        "The hardcoded fallback string in useIsCallerAdminWithTimeout is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'.",
+        "Principal comparisons use .trim().toLowerCase() on both the caller principal and the hardcoded value.",
+        "Browser console logs print the caller principal, fallback principal, and backend isCallerAdmin result during each admin check.",
+        "Admin button and Admin Dashboard are accessible for the principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' on the live site."
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Debug and fix the admin check hook to correctly recognize the authenticated admin principal. Normalize principal comparison (ensure case-insensitivity or format matching), verify the hardcoded fallback principal matches the logged-in user's principal exactly, and add detailed console logging during each phase (initial, checking, timeout) to output both the current caller principal and the expected admin principal. Ensure the timeout logic does not prematurely deny access to legitimate admins."
-        },
-        {
-          "path": "frontend/src/pages/AdminDashboard.tsx",
-          "operation": "modify",
-          "description": "Enhance the AdminDashboard page to display clear debugging information when access is denied. Show the current user's principal and the expected admin principal in the UI or console during the admin check phase. Add user-friendly error messaging that explains why access was denied (e.g., 'Principal mismatch' or 'Timeout during verification') to aid in troubleshooting."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Display the NFT canister/contract address in the UI using the PrincipalDisplay component",
-      "acceptanceCriteria": [
-        "The backend canister principal ID is visible somewhere in the UI (footer or NFT Gallery page)",
-        "The address can be copied to clipboard using the PrincipalDisplay component",
-        "The label clearly identifies this as the NFT contract/canister address"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/Layout.tsx",
-          "operation": "modify",
-          "description": "Add the NFT canister/contract address display to the footer section. Use the PrincipalDisplay component to render the backend canister principal ID with copy-to-clipboard functionality. Label it as 'NFT Contract Address' or 'Canister Address' in German ('NFT-Vertragsadresse' or 'Canister-Adresse'). Position it prominently but non-intrusively in the footer alongside the existing backend status indicator."
+          "description": "Update the hardcoded fallback admin principal to exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. Modify all principal comparison logic to use .trim().toLowerCase() on both sides. Add comprehensive console.log statements that output: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the backend isCallerAdmin call result, and (4) the final computed admin status. Ensure these logs fire during each admin check phase (immediate fallback check and backend verification)."
         }
       ]
     }

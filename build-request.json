@@ -1,106 +1,58 @@
 {
   "kind": "build_request",
-  "title": "Thin borders, rename nav label, remove banner text, fix admin access, show NFT address",
-  "projectName": "Istvan Seidel NFT Gallery",
+  "title": "Fix backend admin principal so isCallerAdmin grants access to live admin user",
+  "projectName": "Light Art NFT",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Reduce all border and outline widths throughout the UI to half their current thickness. Any border currently at 2px should become 1px, any at 1px should become 0.5px, and so on proportionally. Apply this consistently across cards, buttons, inputs, modals, and any other bordered elements.",
-      "target": "frontend",
+      "id": "REQ-12",
+      "text": "In the backend Motoko actor (backend/main.mo), ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin function (or equivalent authorization check) must compare caller.toText() against this principal. If the admin principal is held in a stable variable, update its initialization default and provide a migration path in backend/migration.mo so the live canister state is overwritten with this value on the next upgrade without losing other data. The error message 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.' must no longer appear for this principal.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-1"
+          "msg-latest"
         ],
         "quotes": [
-          "Die Umrandungen sind noch zu fett, bitte um die Hälfte dünner!"
+          "Keine Berechtigung: Nur Admins können Kollektionen verwalten."
         ]
       },
       "acceptanceCriteria": [
-        "All visible borders and outlines appear visually half as thick as in version 59",
-        "No element retains its previous border width",
-        "Cards, inputs, modals, and buttons all reflect the thinner borders"
+        "The admin principal stored in the canister stable state equals 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' after upgrade.",
+        "Calling isCallerAdmin (or the equivalent authorization check) as principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' returns true.",
+        "Collection management operations (create, update, delete) succeed without returning the 'Keine Berechtigung' error when called by this principal.",
+        "No other existing stable state (collections, NFT items, user profiles, minted tokens) is lost during the upgrade.",
+        "migration.mo run function correctly seeds or overwrites the admin principal field during the canister upgrade."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Rename the navigation label for the home/gallery route from 'Galerie' to 'Startseite' in the Navigation component and any other place this label appears in the UI (page titles, breadcrumbs, tab labels, etc.).",
+      "id": "REQ-13",
+      "text": "In the frontend hook useIsCallerAdminWithTimeout, ensure the hardcoded fallback admin principal is 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' and that principal comparisons trim whitespace and normalize to lowercase on both sides. Add or confirm console.log output showing: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the result of the backend isCallerAdmin call, so that any remaining mismatch on the live site can be diagnosed immediately.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-user-1"
+          "msg-latest"
         ],
         "quotes": [
-          "Die Startseite soll nicht 'Galerie' heissen, sondern 'Startseite'"
+          "Keine Berechtigung: Nur Admins können Kollektionen verwalten."
         ]
       },
       "acceptanceCriteria": [
-        "The navigation link for the home/gallery page reads 'Startseite'",
-        "No other UI element labels this page 'Galerie' (except the NFT Gallery sub-page if it is a separate route)"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Remove the 'Galerie' text overlay/label rendered on top of the hero banner image on the Gallery/Startseite page. The banner should display only the image without this text.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-user-1"
-        ],
-        "quotes": [
-          "'Galerie' Schrift nicht auf den Banner"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The hero banner on the Gallery/Startseite page contains no 'Galerie' heading or text overlay",
-        "The banner image is otherwise unchanged"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Fix admin access control so that the authenticated admin user is correctly granted access to the Admin Dashboard. Investigate the useIsCallerAdminWithTimeout hook and AdminDashboard page: ensure the hardcoded principal fallback and timeout logic correctly match the logged-in user's principal. If the principal comparison is case-sensitive or formatted differently, normalize it. Add clear console logging or UI messaging so the current principal and the expected admin principal can be compared during debugging.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-user-1"
-        ],
-        "quotes": [
-          "Admin Bereich verweigert weiterhin den Zugriff"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The logged-in admin user is granted access to the Admin Dashboard without being denied",
-        "The admin check resolves correctly and does not time out for the legitimate admin user",
-        "Non-admin users are still correctly denied access"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Display the NFT canister/contract address (principal ID of the backend canister) visibly in the UI. Show it in a prominent but non-intrusive location such as the footer, the NFT Gallery page header, or the NFT detail modal. Use the existing PrincipalDisplay component with copy-to-clipboard support. The label should read 'NFT Contract Address' or 'Canister Address'.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-user-1"
-        ],
-        "quotes": [
-          "Wo ist die Adresse des NFT?"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The backend canister principal ID is visible somewhere in the UI (footer or NFT Gallery page)",
-        "The address can be copied to clipboard using the PrincipalDisplay component",
-        "The label clearly identifies this as the NFT contract/canister address"
+        "The hardcoded fallback string in useIsCallerAdminWithTimeout is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'.",
+        "Principal comparisons use .trim().toLowerCase() on both the caller principal and the hardcoded value.",
+        "Browser console logs print the caller principal, fallback principal, and backend isCallerAdmin result during each admin check.",
+        "Admin button and Admin Dashboard are accessible for the principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' on the live site."
       ]
     }
   ],
   "constraints": [
-    "Do not change the backend data model or NFT minting logic",
-    "Do not modify immutable frontend paths: useInternetIdentity.ts, useActor.ts, main.tsx, components/ui"
+    "Do not drop or corrupt any existing stable state (collections, NFT items, user profiles, minted tokens) during the backend upgrade.",
+    "Do not edit files listed in frontend.immutablePaths.",
+    "Keep all Motoko logic in backend/main.mo (single-actor architecture)."
   ],
   "nonGoals": [
-    "Redesigning the overall visual theme or color palette",
-    "Adding new NFT features or minting flows",
-    "Changing the NFT Gallery sub-page route or its functionality"
+    "UI redesign or visual changes.",
+    "Adding new features beyond fixing admin access.",
+    "Changing the authentication mechanism away from Internet Identity."
   ],
   "imageRequirements": {
     "required": [],

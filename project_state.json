@@ -1,17 +1,62 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Web3/NFT project with gallery/homepage UI, admin area, and NFT minting functionality. UI refinements and admin access issues are being addressed.",
+  "projectStateVersion": 9,
+  "summary": "Web3/NFT project with gallery/homepage UI, admin area, and NFT minting functionality. UI refinements are pending. Critical bug: Admin access denied on live site for principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae — the backend admin principal stored in the canister does not match the live Internet Identity principal used by the admin user. After Version 62 deployment, admin is still denied: 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.'",
   "architectural_notes": [
     "Project involves NFT minting functionality with a smart contract address that needs to be surfaced in the UI",
-    "Admin area access control is implemented but currently blocking access — needs investigation"
+    "Admin area access control is implemented but currently blocking access — needs investigation",
+    "Admin button flash-then-hide bug on live site: draft works but live denies access — likely caused by canister ID mismatch or environment variable differences between draft and live builds",
+    "Admin principal on live site confirmed as: uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae — backend canister must be updated to recognize this principal as admin",
+    "After Version 62 deployment, admin still denied on live: error message 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.' — backend authorization check is still not recognizing the admin principal"
   ],
   "known_issues": [
-    "Admin area is denying access to the user despite being logged in",
-    "NFT contract address is not displayed in the UI"
+    "NFT contract address is not displayed in the UI",
+    "Live admin access denied for principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae — backend canister admin principal does not match this value",
+    "Post-Version 62: Admin collection management still denied on live — backend isCallerAdmin or equivalent still not matching principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae"
   ],
   "isFixRequest": true,
-  "existing_features": [],
+  "existing_features": [
+    {
+      "id": "feature-fix-the-admin-authentication-race-condition-in-useiscalleradminwithtimeout-the-button-should-not-flash-visible-before-the-auth-check-completes-ensure-the-initial-state-is-unknown-loading-not-true-so-the-admin-button-and-admin-dashboard-access-are-hidden-until-the-backend-confirms-admin-status-remove-any-logic-that-temporarily-assumes-admin-true-before-the-backend-responds",
+      "title": "Fix the admin authentication race condition in useIsCallerAdminWithTimeout: the button should not flash visible before the auth check completes. Ensure the initial state is 'unknown/loading' (not 'true') so the Admin button and Admin Dashboard access are hidden until the backend confirms admin status. Remove any logic that temporarily assumes admin=true before the backend responds.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-admin-principal-check-logic-in-useiscalleradminwithtimeout-and-any-hardcoded-principal-fallback-normalize-both-the-logged-in-principal-and-the-hardcoded-fallback-principal-to-the-same-string-format-before-comparison-trim-whitespace-consistent-casing-add-console-log-statements-that-output-the-current-caller-s-principal-the-hardcoded-fallback-principal-and-the-result-of-the-backend-iscalleradmin-call-so-the-live-vs-draft-discrepancy-can-be-diagnosed",
+      "title": "Fix the admin principal check logic in useIsCallerAdminWithTimeout and any hardcoded principal fallback: normalize both the logged-in principal and the hardcoded fallback principal to the same string format before comparison (trim whitespace, consistent casing). Add console.log statements that output the current caller's principal, the hardcoded fallback principal, and the result of the backend isCallerAdmin call so the live vs. draft discrepancy can be diagnosed.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-admindashboard-page-improve-the-loading-and-access-denied-ux-show-a-persistent-loading-indicator-while-the-admin-check-is-in-progress-do-not-flash-content-and-show-a-clear-access-denied-message-with-the-current-caller-principal-displayed-using-principaldisplay-component-when-admin-check-returns-false-to-aid-debugging-on-live",
+      "title": "In the AdminDashboard page, improve the loading and access-denied UX: show a persistent loading indicator while the admin check is in progress (do not flash content), and show a clear 'Access Denied' message with the current caller principal displayed (using PrincipalDisplay component) when admin check returns false, to aid debugging on live.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-hardcoded-fallback-admin-principal-in-the-frontend-hook-useiscalleradminwithtimeout-and-any-other-frontend-location-where-an-admin-principal-string-is-hardcoded-to-uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae-ensure-the-comparison-is-done-after-trimming-whitespace-and-normalizing-to-lowercase-on-both-sides-so-that-format-differences-do-not-cause-a-false-mismatch",
+      "title": "Update the hardcoded fallback admin principal in the frontend hook useIsCallerAdminWithTimeout (and any other frontend location where an admin principal string is hardcoded) to 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. Ensure the comparison is done after trimming whitespace and normalizing to lowercase on both sides so that format differences do not cause a false mismatch.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-frontend-hook-useiscalleradminwithtimeout-ensure-the-hardcoded-fallback-admin-principal-is-uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae-and-that-principal-comparisons-trim-whitespace-and-normalize-to-lowercase-on-both-sides-add-or-confirm-console-log-output-showing-1-the-current-caller-s-principal-text-2-the-hardcoded-fallback-principal-3-the-result-of-the-backend-iscalleradmin-call-so-that-any-remaining-mismatch-on-the-live-site-can-be-diagnosed-immediately",
+      "title": "In the frontend hook useIsCallerAdminWithTimeout, ensure the hardcoded fallback admin principal is 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' and that principal comparisons trim whitespace and normalize to lowercase on both sides. Add or confirm console.log output showing: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the result of the backend isCallerAdmin call, so that any remaining mismatch on the live site can be diagnosed immediately.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
@@ -74,6 +119,30 @@
       "summary": "Display the NFT canister/contract address (principal ID of the backend canister) visibly in the UI. Show it in a prominent but non-intrusive location such as the footer, the NFT Gallery page header, or the NFT detail modal. Use the existing PrincipalDisplay component with copy-to-clipboard support. The label should read 'NFT Contract Address' or 'Canister Address'.",
       "reqIds": [
         "REQ-5"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Verify and fix the backend isCallerAdmin (or equivalent) Motoko function to correctly identify the admin principal on the live canister. Ensure the admin principal stored in the backend state matches the principal used by the live frontend's Internet Identity session. Add or confirm that the backend admin principal is set correctly during canister initialization or upgrade.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Update the backend Motoko actor so that the admin principal stored in the canister state is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. This principal must be set as the authoritative admin principal used in the isCallerAdmin check (or equivalent authorization mixin). If the admin principal is currently hardcoded or set during initialization, replace it with this value. If it is stored in stable state, ensure the migration or upgrade path writes this value so it takes effect on the live canister without data loss.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "In the backend Motoko actor (backend/main.mo), ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin function (or equivalent authorization check) must compare caller.toText() against this principal. If the admin principal is held in a stable variable, update its initialization default and provide a migration path in backend/migration.mo so the live canister state is overwritten with this value on the next upgrade without losing other data. The error message 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.' must no longer appear for this principal.",
+      "reqIds": [
+        "REQ-12"
       ],
       "status": "pending"
     }

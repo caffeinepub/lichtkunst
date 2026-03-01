@@ -5,12 +5,13 @@ import Time "mo:core/Time";
 import Principal "mo:core/Principal";
 import Nat "mo:core/Nat";
 import Runtime "mo:core/Runtime";
-import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
 
-(actor {
+import MixinAuthorization "authorization/MixinAuthorization";
+
+actor {
   type TokenId = Nat;
 
   public type NFTCollection = {
@@ -65,17 +66,24 @@ import AccessControl "authorization/access-control";
   var nextTokenId = 1;
 
   let accessControlState = AccessControl.initState();
-  include MixinStorage();
   include MixinAuthorization(accessControlState);
+  include MixinStorage();
 
   // Helper: Convert Map values to Array
   func mapToArray<K, V>(map : Map.Map<K, V>) : [V] {
     map.values().toArray();
   };
 
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    userProfiles.add(caller, profile);
+  };
+
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view profiles");
     };
     userProfiles.get(caller);
   };
@@ -85,13 +93,6 @@ import AccessControl "authorization/access-control";
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
-  };
-
-  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
-    };
-    userProfiles.add(caller, profile);
   };
 
   public query func getAllCollections() : async [NFTCollection] {
@@ -320,4 +321,4 @@ import AccessControl "authorization/access-control";
       case (?tokenIds) { tokenIds.size() };
     };
   };
-});
+};
