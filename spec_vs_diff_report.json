@@ -1,39 +1,33 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T19:45:51.284Z",
-  "summary": "The diff implements partial changes for the three requirements. REQ-16 (frontend hook logging) appears well-implemented. REQ-14 (backend admin principal fix) is partially implemented but uses a different authorization mechanism (AccessControl module) rather than a direct isCallerAdmin function comparing caller.toText() against the hardcoded string. REQ-15 (migration.mo) is technically added but is essentially a no-op stub that does not actually overwrite the admin principal during upgrade.",
+  "generatedAt": "2026-03-01T21:58:41.765Z",
+  "summary": "The diff implements REQ-3 fully (hardcoded admin principal in the frontend hook with immediate access). REQ-1 is partially addressed — the backend main.mo still delegates to an external AccessControl module rather than containing a hardcoded adminPrincipals array directly in main.mo with the user's Principal. REQ-2 is not clearly implemented — the createCollection/addCollection function does not appear to log/expose msg.caller in its response or error, and the authorization guard still references AccessControl.hasPermission rather than the hardcoded admin check.",
   "missing_requirements": [
     {
-      "id": "REQ-14",
-      "requirement": "Ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin comparison must use caller.toText() and compare it directly against this string. If the admin principal is held in a stable variable, set its default/initial value to this principal so it is authoritative on upgrade.",
-      "reason": "The backend/main.mo diff shows authorization is delegated to an AccessControl module (AccessControl.hasPermission / AccessControl.isAdmin) and a MixinAuthorization. There is no visible isCallerAdmin function using caller.toText() compared against the hardcoded principal string. The stable variable holding the admin principal and its initialization to the required value are not shown, and AccessControl.initState() does not visibly set this principal.",
+      "id": "REQ-1",
+      "requirement": "The isAdmin()/isCallerAdmin() function in main.mo must contain a hardcoded adminPrincipals array with the user's Principal ID, returning true when msg.caller matches without any further checks. Other admin validation logic must be removed or bypassed.",
+      "reason": "The diff shows backend/main.mo still imports and uses an external AccessControl module (AccessControl.hasPermission, AccessControl.isAdmin) rather than containing a hardcoded adminPrincipals array directly in main.mo. No hardcoded Principal string is visible in main.mo. The requirement specifically states the adminPrincipals array must be in main.mo.",
       "evidence": [
-        "backend/main.mo"
+        "backend/main.mo",
+        "backend/migration.mo"
       ]
     },
     {
-      "id": "REQ-15",
-      "requirement": "Create or update backend/migration.mo to overwrite the live canister's stored admin principal with 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' during the next canister upgrade, without losing any other stable state.",
-      "reason": "The added backend/migration.mo is a trivial stub: it takes an empty record and returns it unchanged. It does not receive or modify any stable state including the admin principal. The AC requires migration.mo to write the correct admin principal to the stable admin variable on upgrade and preserve all other stable state, neither of which this stub accomplishes.",
+      "id": "REQ-2",
+      "requirement": "The createCollection (or addCollection) function must log/expose msg.caller in its response or error, succeed for the hardcoded admin Principal, and reject with a clear error for non-admins.",
+      "reason": "The truncated diff for backend/main.mo shows addCollection still uses AccessControl.hasPermission check and does not include any logging or exposure of msg.caller in its response. There is no visible evidence that the function returns or logs the caller Principal for runtime confirmation, nor that it has been updated to use the hardcoded adminPrincipals check.",
       "evidence": [
-        "backend/migration.mo"
+        "backend/main.mo"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Refactored backend to use an AccessControl module and MixinAuthorization mixin instead of the specified isCallerAdmin pattern",
-      "reason": "The build request specifically requires isCallerAdmin to use caller.toText() compared against the hardcoded string. Instead, the diff introduces AccessControl.hasPermission, AccessControl.isAdmin, AccessControl.initState(), and MixinAuthorization, representing an architectural change beyond what was asked.",
+      "description": "A migration.mo module was added that defines an OldActor with an adminPrincipal field and a trivial migration function.",
+      "reason": "The build request does not mention adding a migration module or any data migration logic. This file was not requested and introduces new infrastructure not covered by any requirement.",
       "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "description": "Backend uses MixinStorage blob storage integration",
-      "reason": "The diff shows include MixinStorage() and import MixinStorage from blob-storage/Mixin which were not part of the admin principal fix requirements.",
-      "evidence": [
-        "backend/main.mo"
+        "backend/migration.mo"
       ]
     }
   ],

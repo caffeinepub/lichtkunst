@@ -1,21 +1,31 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix backend admin principal and force-set admin to uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae",
+  "title": "Hardcode admin principal in frontend and remove blocking admin checks",
   "requirements": [
     {
-      "id": "REQ-16",
-      "summary": "Add comprehensive console logging to useIsCallerAdminWithTimeout hook for immediate diagnosis of admin authorization issues",
+      "id": "REQ-3",
+      "summary": "Update the frontend useIsCallerAdminWithTimeout hook to hardcode the admin Principal and ensure immediate admin access",
       "acceptanceCriteria": [
-        "Opening the browser DevTools console on the live site shows the caller's principal, the hardcoded fallback, the backend isCallerAdmin result, and any error",
-        "The hook does not throw unhandled exceptions; errors are caught and logged",
-        "Admin status resolves correctly (true) for principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae after the backend fix is deployed"
+        "The hardcoded admin Principal in `useIsCallerAdminWithTimeout` matches the one in the backend.",
+        "When logged in as the hardcoded admin, the Admin nav link appears immediately.",
+        "The admin dashboard loads without a permission error when accessed by the hardcoded admin."
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Add detailed console logging throughout the hook to log: (1) the caller's principal text retrieved from identity.getPrincipal().toText(), (2) the hardcoded fallback principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae', (3) the raw boolean result returned by the backend actor.isCallerAdmin() call, (4) any errors thrown during the backend call (with error.message and error.stack if available). Wrap the backend call in a try-catch block to ensure errors are logged and do not crash the hook. Log these values at key phases: when starting the check, after the backend call completes, and when transitioning to confirmed/denied/timeout/error states. Use console.group to organize the logs under a 'useIsCallerAdminWithTimeout' label for clarity."
+          "description": "Replace the hardcoded admin principal constant with the user's actual Principal ID. Update the hook logic to immediately return admin status when the authenticated caller matches the hardcoded Principal, bypassing the timeout and backend verification for that specific user. Ensure the hook still attempts backend verification for non-hardcoded principals. Verify the authorization component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/Navigation.tsx",
+          "operation": "modify",
+          "description": "Update the Navigation component to use the result from useIsCallerAdminWithTimeout and ensure the Admin link renders immediately when the hardcoded admin Principal is authenticated, without waiting for backend verification. Remove any timeout-based conditional rendering for the hardcoded admin."
+        },
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Update the AdminDashboard page to check admin status using useIsCallerAdminWithTimeout and grant immediate access when the hardcoded admin Principal is authenticated. Remove any blocking guards or permission checks that would prevent the hardcoded admin from seeing the dashboard content."
         }
       ]
     }

@@ -2,17 +2,15 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
-import Principal "mo:core/Principal";
 import Nat "mo:core/Nat";
 import Runtime "mo:core/Runtime";
 import Iter "mo:core/Iter";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 import MixinAuthorization "authorization/MixinAuthorization";
+import Migration "migration";
 
-// Restore all state and collections except for adminPrincipal
 (with migration = Migration.run)
 actor {
   type TokenId = Nat;
@@ -323,5 +321,9 @@ actor {
       case (null) { 0 };
       case (?tokenIds) { tokenIds.size() };
     };
+  };
+
+  public query ({ caller }) func checkIsAdmin() : async Bool {
+    AccessControl.isAdmin(accessControlState, caller);
   };
 };

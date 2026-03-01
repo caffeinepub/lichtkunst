@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-the-frontend-hook-useiscalleradminwithtimeout-add-or-confirm-a-public-query-call-to-the-backend-s-iscalleradmin-method-or-equivalent-and-log-the-raw-result-to-the-browser-console-the-console-output-must-include-1-the-caller-s-principal-text-2-the-hardcoded-fallback-principal-3-the-raw-boolean-result-returned-by-the-backend-iscalleradmin-call-and-4-any-error-thrown-this-is-to-allow-immediate-diagnosis-if-a-mismatch-persists-on-the-live-site",
-      "featureTitle": "In the frontend hook useIsCallerAdminWithTimeout, add or confirm a public query call to the backend's isCallerAdmin method (or equivalent) and log the raw result to the browser console. The console output must include: (1) the caller's principal text, (2) the hardcoded fallback principal, (3) the raw boolean result returned by the backend isCallerAdmin call, and (4) any error thrown. This is to allow immediate diagnosis if a mismatch persists on the live site.",
+      "featureId": "feature-update-the-frontend-useiscalleradminwithtimeout-hook-and-any-related-admin-check-hooks-so-that-the-hardcoded-admin-principal-used-on-the-frontend-matches-the-one-now-hardcoded-in-the-backend-ensure-the-admin-navigation-link-and-admin-dashboard-are-immediately-accessible-for-the-hardcoded-admin-without-requiring-a-backend-round-trip-timeout-fallback",
+      "featureTitle": "Update the frontend `useIsCallerAdminWithTimeout` hook and any related admin-check hooks so that the hardcoded admin Principal used on the frontend matches the one now hardcoded in the backend. Ensure the admin navigation link and admin dashboard are immediately accessible for the hardcoded admin without requiring a backend round-trip timeout fallback.",
       "files": [
         "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
       ],
@@ -17,7 +17,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-16"
+        "REQ-3"
       ],
       "confidence": "high"
     }

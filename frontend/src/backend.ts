@@ -154,6 +154,7 @@ export interface backendInterface {
     addCollection(id: string, name: string, description: string): Promise<void>;
     addNFT(id: string, collectionId: string, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkIsAdmin(): Promise<boolean>;
     countMyNFTs(): Promise<bigint>;
     deleteCollection(id: string): Promise<void>;
     deleteNFT(id: string): Promise<void>;
@@ -315,6 +316,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n9(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async checkIsAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.checkIsAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.checkIsAdmin();
             return result;
         }
     }

@@ -1,5 +1,10 @@
 module {
-  public func run(old : {}) : {} {
-    old;
+  type OldActor = {
+    adminPrincipal : Text;
+  };
+  type NewActor = {};
+
+  public func run(old : OldActor) : NewActor {
+    {};
   };
 };

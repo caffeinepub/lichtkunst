@@ -61,6 +61,7 @@ export interface backendInterface {
     addCollection(id: string, name: string, description: string): Promise<void>;
     addNFT(id: string, collectionId: string, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkIsAdmin(): Promise<boolean>;
     countMyNFTs(): Promise<bigint>;
     deleteCollection(id: string): Promise<void>;
     deleteNFT(id: string): Promise<void>;

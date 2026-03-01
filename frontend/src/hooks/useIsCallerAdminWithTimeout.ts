@@ -17,6 +17,7 @@ export interface AdminCheckResult {
   retry: () => void;
 }
 
+// Hardcoded admin principal — immediate access granted without backend round-trip
 const HARDCODED_ADMIN_PRINCIPAL = 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae';
 const DEFAULT_TIMEOUT_MS = 15000;
 
@@ -43,7 +44,7 @@ export function useIsCallerAdminWithTimeout(timeoutMs: number = DEFAULT_TIMEOUT_
 
     checkedRef.current = false;
 
-    console.group('[useIsCallerAdminWithTimeout] Admin check started (retryCount=' + retryCount + ')');
+    console.group('[AdminCheck] Admin check started (retryCount=' + retryCount + ')');
     console.log('isInitializing:', isInitializing);
     console.log('identity:', identity ? identity.getPrincipal().toText() : null);
     console.log('actor ready:', !!actor);
@@ -52,13 +53,11 @@ export function useIsCallerAdminWithTimeout(timeoutMs: number = DEFAULT_TIMEOUT_
     console.groupEnd();
 
     if (isInitializing) {
-      console.log('[useIsCallerAdminWithTimeout] Phase → initializing (identity still loading)');
       setPhase('initializing');
       return;
     }
 
     if (!identity) {
-      console.log('[useIsCallerAdminWithTimeout] Phase → denied (no identity / not logged in)');
       setPhase('denied');
       return;
     }
@@ -67,66 +66,65 @@ export function useIsCallerAdminWithTimeout(timeoutMs: number = DEFAULT_TIMEOUT_
     const normalizedCaller = callerPrincipal.trim().toLowerCase();
     const normalizedHardcoded = HARDCODED_ADMIN_PRINCIPAL.trim().toLowerCase();
 
-    console.group('[useIsCallerAdminWithTimeout] Principal comparison');
-    console.log('Caller principal (raw):', callerPrincipal);
-    console.log('Hardcoded admin principal (raw):', HARDCODED_ADMIN_PRINCIPAL);
-    console.log('Caller principal (normalized):', normalizedCaller);
-    console.log('Hardcoded admin principal (normalized):', normalizedHardcoded);
-    console.log('Principals match (hardcoded check):', normalizedCaller === normalizedHardcoded);
+    console.group('[AdminCheck] Principal comparison');
+    console.log('Caller principal:', callerPrincipal);
+    console.log('Hardcoded admin principal:', HARDCODED_ADMIN_PRINCIPAL);
+    console.log('Match:', normalizedCaller === normalizedHardcoded);
     console.groupEnd();
 
-    // Immediate hardcoded admin check — no backend call needed
+    // ── Immediate hardcoded admin check — no backend call needed ──────────
     if (normalizedCaller === normalizedHardcoded) {
-      console.log('[useIsCallerAdminWithTimeout] ✅ Phase → confirmed (hardcoded admin match — access granted immediately)');
+      console.log('[AdminCheck] ✅ Phase → confirmed (hardcoded admin match — access granted immediately)');
+      checkedRef.current = true;
       setPhase('confirmed');
       return;
     }
 
-    // Not the hardcoded admin — proceed with backend check
+    // ── Not the hardcoded admin — proceed with backend check ──────────────
     if (actorFetching || !actor) {
-      console.log('[useIsCallerAdminWithTimeout] Phase → waiting-for-actor (actor not ready yet)');
+      console.log('[AdminCheck] Phase → waiting-for-actor (actor not ready yet)');
       setPhase('waiting-for-actor');
 
-      // Start timeout while waiting for actor
       timeoutRef.current = setTimeout(() => {
         if (!checkedRef.current) {
-          console.warn('[useIsCallerAdminWithTimeout] ⏱ Phase → timeout (timed out waiting for actor after ' + timeoutMs + 'ms)');
+          console.warn('[AdminCheck] ⏱ Phase → timeout (timed out waiting for actor after ' + timeoutMs + 'ms)');
           setPhase('timeout');
         }
       }, timeoutMs);
       return;
     }
 
-    // Actor is ready — perform backend check
-    console.log('[useIsCallerAdminWithTimeout] Phase → checking (calling backend isCallerAdmin())');
+    // ── Actor is ready — perform backend check ────────────────────────────
+    console.log('[AdminCheck] Phase → checking (calling backend isCallerAdmin())');
     setPhase('checking');
 
     const performCheck = async () => {
       try {
-        console.log('[useIsCallerAdminWithTimeout] Calling actor.isCallerAdmin() for principal:', callerPrincipal);
+        console.log('[AdminCheck] Calling actor.isCallerAdmin() for principal:', callerPrincipal);
         const result = await actor.isCallerAdmin();
         checkedRef.current = true;
-        console.group('[useIsCallerAdminWithTimeout] Backend isCallerAdmin() result');
-        console.log('Raw result:', result);
-        console.log('Type:', typeof result);
+
+        console.group('[AdminCheck] Backend admin check result');
         console.log('Caller principal:', callerPrincipal);
+        console.log('isCallerAdmin() result:', result);
         console.log('Final admin status:', result ? '✅ ADMIN' : '❌ NOT ADMIN');
         console.groupEnd();
+
         const nextPhase = result ? 'confirmed' : 'denied';
-        console.log('[useIsCallerAdminWithTimeout] Phase →', nextPhase);
+        console.log('[AdminCheck] Phase →', nextPhase);
         setPhase(nextPhase);
       } catch (err: unknown) {
         checkedRef.current = true;
-        console.group('[useIsCallerAdminWithTimeout] ❌ Backend isCallerAdmin() error');
+
+        console.group('[AdminCheck] ❌ Backend isCallerAdmin() error');
         if (err instanceof Error) {
           console.error('Error message:', err.message);
-          console.error('Error stack:', err.stack);
         } else {
           console.error('Unknown error:', err);
         }
         console.log('Caller principal at time of error:', callerPrincipal);
         console.groupEnd();
-        console.log('[useIsCallerAdminWithTimeout] Phase → error');
+        console.log('[AdminCheck] Phase → error');
         setPhase('error');
       }
     };
@@ -134,8 +132,7 @@ export function useIsCallerAdminWithTimeout(timeoutMs: number = DEFAULT_TIMEOUT_
     // Set timeout for backend check
     timeoutRef.current = setTimeout(() => {
       if (!checkedRef.current) {
-        console.warn('[useIsCallerAdminWithTimeout] ⏱ Phase → timeout (backend isCallerAdmin() did not respond within ' + timeoutMs + 'ms)');
-        console.warn('[useIsCallerAdminWithTimeout] Caller principal at timeout:', callerPrincipal);
+        console.warn('[AdminCheck] ⏱ Phase → timeout (backend isCallerAdmin() did not respond within ' + timeoutMs + 'ms)');
         setPhase('timeout');
       }
     }, timeoutMs);

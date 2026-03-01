@@ -1,11 +1,11 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the admin principal in the backend so that the correct principal `uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae` is recognized as admin, and add frontend diagnostic logging for admin status resolution.
+**Goal:** Hardcode a specific admin Principal ID in both the backend and frontend so that collection creation and admin dashboard access work without being blocked by existing auth checks.
 
 **Planned changes:**
-- In `backend/main.mo`, set the admin principal stable variable (or hardcoded constant) to exactly `uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae` and ensure `isCallerAdmin` compares `caller.toText()` against this string
-- Create or update `backend/migration.mo` to overwrite the stored admin principal with the correct value during canister upgrade, preserving all other stable state (collections, NFTs, user profiles, minted tokens)
-- In the frontend `useIsCallerAdminWithTimeout` hook, add console logging that outputs the caller's principal, the hardcoded fallback principal, the raw boolean result from the backend `isCallerAdmin` call, and any errors encountered
+- In `backend/main.mo`, add the user's Principal ID to a hardcoded `adminPrincipals` array and update `isAdmin()`/`isCallerAdmin()` to return `true` when `msg.caller` matches any entry in that array, removing or bypassing any other checks that override this grant.
+- In `backend/main.mo`, update the `createCollection` function to only throw an authorization error when `isAdmin(msg.caller)` returns `false`, and ensure it succeeds (returning the created collection) for the hardcoded admin Principal.
+- In the frontend, update `useIsCallerAdminWithTimeout` (and any related admin-check hooks) to match the hardcoded admin Principal from the backend, so the Admin nav link and dashboard are immediately accessible without a timeout fallback.
 
-**User-visible outcome:** After redeployment, the specified principal can create and manage collections without receiving a "Keine Berechtigung" error. Browser DevTools console shows detailed admin status diagnostic output for troubleshooting.
+**User-visible outcome:** When logged in as the hardcoded admin Principal, the Admin navigation link appears immediately and collection creation succeeds without permission errors.

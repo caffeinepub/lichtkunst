@@ -84,6 +84,7 @@ export interface _SERVICE {
     undefined
   >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'checkIsAdmin' : ActorMethod<[], boolean>,
   'countMyNFTs' : ActorMethod<[], bigint>,
   'deleteCollection' : ActorMethod<[string], undefined>,
   'deleteNFT' : ActorMethod<[string], undefined>,
