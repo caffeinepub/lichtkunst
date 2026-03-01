@@ -1,22 +1,21 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Frontend Admin Principal Check and Diagnostics",
+  "title": "Fix backend admin principal and force-set admin to uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae",
   "requirements": [
     {
-      "id": "REQ-13",
-      "summary": "Update frontend admin check hook to use correct hardcoded principal, normalize comparisons, and add diagnostic console logging",
+      "id": "REQ-16",
+      "summary": "Add comprehensive console logging to useIsCallerAdminWithTimeout hook for immediate diagnosis of admin authorization issues",
       "acceptanceCriteria": [
-        "The hardcoded fallback string in useIsCallerAdminWithTimeout is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'.",
-        "Principal comparisons use .trim().toLowerCase() on both the caller principal and the hardcoded value.",
-        "Browser console logs print the caller principal, fallback principal, and backend isCallerAdmin result during each admin check.",
-        "Admin button and Admin Dashboard are accessible for the principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' on the live site."
+        "Opening the browser DevTools console on the live site shows the caller's principal, the hardcoded fallback, the backend isCallerAdmin result, and any error",
+        "The hook does not throw unhandled exceptions; errors are caught and logged",
+        "Admin status resolves correctly (true) for principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae after the backend fix is deployed"
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
           "operation": "modify",
-          "description": "Update the hardcoded fallback admin principal to exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. Modify all principal comparison logic to use .trim().toLowerCase() on both sides. Add comprehensive console.log statements that output: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the backend isCallerAdmin call result, and (4) the final computed admin status. Ensure these logs fire during each admin check phase (immediate fallback check and backend verification)."
+          "description": "Add detailed console logging throughout the hook to log: (1) the caller's principal text retrieved from identity.getPrincipal().toText(), (2) the hardcoded fallback principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae', (3) the raw boolean result returned by the backend actor.isCallerAdmin() call, (4) any errors thrown during the backend call (with error.message and error.stack if available). Wrap the backend call in a try-catch block to ensure errors are logged and do not crash the hook. Log these values at key phases: when starting the check, after the backend call completes, and when transitioning to confirmed/denied/timeout/error states. Use console.group to organize the logs under a 'useIsCallerAdminWithTimeout' label for clarity."
         }
       ]
     }

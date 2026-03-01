@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
+  "projectStateVersion": 11,
   "summary": "Web3/NFT project with gallery/homepage UI, admin area, and NFT minting functionality. UI refinements are pending. Critical bug: Admin access denied on live site for principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae — the backend admin principal stored in the canister does not match the live Internet Identity principal used by the admin user. After Version 62 deployment, admin is still denied: 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.'",
   "architectural_notes": [
     "Project involves NFT minting functionality with a smart contract address that needs to be surfaced in the UI",
@@ -53,6 +53,14 @@
       "title": "In the frontend hook useIsCallerAdminWithTimeout, ensure the hardcoded fallback admin principal is 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' and that principal comparisons trim whitespace and normalize to lowercase on both sides. Add or confirm console.log output showing: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the result of the backend isCallerAdmin call, so that any remaining mismatch on the live site can be diagnosed immediately.",
       "reqIds": [
         "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-frontend-hook-useiscalleradminwithtimeout-add-or-confirm-a-public-query-call-to-the-backend-s-iscalleradmin-method-or-equivalent-and-log-the-raw-result-to-the-browser-console-the-console-output-must-include-1-the-caller-s-principal-text-2-the-hardcoded-fallback-principal-3-the-raw-boolean-result-returned-by-the-backend-iscalleradmin-call-and-4-any-error-thrown-this-is-to-allow-immediate-diagnosis-if-a-mismatch-persists-on-the-live-site",
+      "title": "In the frontend hook useIsCallerAdminWithTimeout, add or confirm a public query call to the backend's isCallerAdmin method (or equivalent) and log the raw result to the browser console. The console output must include: (1) the caller's principal text, (2) the hardcoded fallback principal, (3) the raw boolean result returned by the backend isCallerAdmin call, and (4) any error thrown. This is to allow immediate diagnosis if a mismatch persists on the live site.",
+      "reqIds": [
+        "REQ-16"
       ],
       "version": 1
     }
@@ -143,6 +151,22 @@
       "summary": "In the backend Motoko actor (backend/main.mo), ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin function (or equivalent authorization check) must compare caller.toText() against this principal. If the admin principal is held in a stable variable, update its initialization default and provide a migration path in backend/migration.mo so the live canister state is overwritten with this value on the next upgrade without losing other data. The error message 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.' must no longer appear for this principal.",
       "reqIds": [
         "REQ-12"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-15",
+      "summary": "In backend/main.mo, locate the admin principal storage (stable variable or hardcoded constant) and the isCallerAdmin function (or equivalent authorization check). Ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin comparison must use caller.toText() and compare it directly against this string. If the admin principal is held in a stable variable, set its default/initial value to this principal so it is authoritative on upgrade.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Create or update backend/migration.mo to overwrite the live canister's stored admin principal with 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' during the next canister upgrade, without losing any other stable state (collections, NFT items, user profiles, minted tokens).",
+      "reqIds": [
+        "REQ-15"
       ],
       "status": "pending"
     }

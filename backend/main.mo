@@ -5,12 +5,15 @@ import Time "mo:core/Time";
 import Principal "mo:core/Principal";
 import Nat "mo:core/Nat";
 import Runtime "mo:core/Runtime";
+import Iter "mo:core/Iter";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
-
+import Migration "migration";
 import MixinAuthorization "authorization/MixinAuthorization";
 
+// Restore all state and collections except for adminPrincipal
+(with migration = Migration.run)
 actor {
   type TokenId = Nat;
 
@@ -69,7 +72,6 @@ actor {
   include MixinAuthorization(accessControlState);
   include MixinStorage();
 
-  // Helper: Convert Map values to Array
   func mapToArray<K, V>(map : Map.Map<K, V>) : [V] {
     map.values().toArray();
   };
@@ -104,10 +106,11 @@ actor {
   };
 
   public query func getNFTsByCollection(collectionId : Text) : async [NFTItem] {
-    let all = mapToArray(nfts);
-    all.filter(func(nft : NFTItem) : Bool {
-      nft.collectionId == collectionId;
-    });
+    mapToArray(nfts).filter(
+      func(nft) {
+        nft.collectionId == collectionId;
+      }
+    );
   };
 
   public query func getNFT(id : Text) : async ?NFTItem {

@@ -1,25 +1,32 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T13:41:29.499Z",
+  "generatedAt": "2026-03-01T19:45:51.289Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
+    "total": 3,
     "implemented": 1,
     "items": [
       {
-        "id": "REQ-12",
-        "summary": "In the backend Motoko actor (backend/main.mo), ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin function (or equivalent authorization check) must compare caller.toText() against this principal. If the admin principal is held in a stable variable, update its initialization default and provide a migration path in backend/migration.mo so the live canister state is overwritten with this value on the next upgrade without losing other data. The error message 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.' must no longer appear for this principal.",
+        "id": "REQ-14",
+        "summary": "In backend/main.mo, locate the admin principal storage (stable variable or hardcoded constant) and the isCallerAdmin function (or equivalent authorization check). Ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin comparison must use caller.toText() and compare it directly against this string. If the admin principal is held in a stable variable, set its default/initial value to this principal so it is authoritative on upgrade.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-13",
-        "summary": "In the frontend hook useIsCallerAdminWithTimeout, ensure the hardcoded fallback admin principal is 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' and that principal comparisons trim whitespace and normalize to lowercase on both sides. Add or confirm console.log output showing: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the result of the backend isCallerAdmin call, so that any remaining mismatch on the live site can be diagnosed immediately.",
+        "id": "REQ-15",
+        "summary": "Create or update backend/migration.mo to overwrite the live canister's stored admin principal with 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' during the next canister upgrade, without losing any other stable state (collections, NFT items, user profiles, minted tokens).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-16",
+        "summary": "In the frontend hook useIsCallerAdminWithTimeout, add or confirm a public query call to the backend's isCallerAdmin method (or equivalent) and log the raw result to the browser console. The console output must include: (1) the caller's principal text, (2) the hardcoded fallback principal, (3) the raw boolean result returned by the backend isCallerAdmin call, and (4) any error thrown. This is to allow immediate diagnosis if a mismatch persists on the live site.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
@@ -32,6 +39,7 @@
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",

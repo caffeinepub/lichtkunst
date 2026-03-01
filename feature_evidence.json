@@ -2,8 +2,8 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-in-the-frontend-hook-useiscalleradminwithtimeout-ensure-the-hardcoded-fallback-admin-principal-is-uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae-and-that-principal-comparisons-trim-whitespace-and-normalize-to-lowercase-on-both-sides-add-or-confirm-console-log-output-showing-1-the-current-caller-s-principal-text-2-the-hardcoded-fallback-principal-3-the-result-of-the-backend-iscalleradmin-call-so-that-any-remaining-mismatch-on-the-live-site-can-be-diagnosed-immediately",
-      "featureTitle": "In the frontend hook useIsCallerAdminWithTimeout, ensure the hardcoded fallback admin principal is 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' and that principal comparisons trim whitespace and normalize to lowercase on both sides. Add or confirm console.log output showing: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the result of the backend isCallerAdmin call, so that any remaining mismatch on the live site can be diagnosed immediately.",
+      "featureId": "feature-in-the-frontend-hook-useiscalleradminwithtimeout-add-or-confirm-a-public-query-call-to-the-backend-s-iscalleradmin-method-or-equivalent-and-log-the-raw-result-to-the-browser-console-the-console-output-must-include-1-the-caller-s-principal-text-2-the-hardcoded-fallback-principal-3-the-raw-boolean-result-returned-by-the-backend-iscalleradmin-call-and-4-any-error-thrown-this-is-to-allow-immediate-diagnosis-if-a-mismatch-persists-on-the-live-site",
+      "featureTitle": "In the frontend hook useIsCallerAdminWithTimeout, add or confirm a public query call to the backend's isCallerAdmin method (or equivalent) and log the raw result to the browser console. The console output must include: (1) the caller's principal text, (2) the hardcoded fallback principal, (3) the raw boolean result returned by the backend isCallerAdmin call, and (4) any error thrown. This is to allow immediate diagnosis if a mismatch persists on the live site.",
       "files": [
         "frontend/src/hooks/useIsCallerAdminWithTimeout.ts"
       ],
@@ -17,7 +17,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-13"
+        "REQ-16"
       ],
       "confidence": "high"
     }

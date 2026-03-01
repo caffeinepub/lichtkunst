@@ -1,28 +1,46 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T13:41:29.496Z",
-  "summary": "The diff implements REQ-13 (frontend hook updates) fully. For REQ-12, the backend main.mo is modified but the diff does not show a migration.mo file being added or modified, and the backend changes use a different access control pattern (AccessControl module) rather than a stable variable with the hardcoded principal string — making it unclear whether the specific principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' is stored as the admin principal or how the migration path is provided.",
+  "generatedAt": "2026-03-01T19:45:51.284Z",
+  "summary": "The diff implements partial changes for the three requirements. REQ-16 (frontend hook logging) appears well-implemented. REQ-14 (backend admin principal fix) is partially implemented but uses a different authorization mechanism (AccessControl module) rather than a direct isCallerAdmin function comparing caller.toText() against the hardcoded string. REQ-15 (migration.mo) is technically added but is essentially a no-op stub that does not actually overwrite the admin principal during upgrade.",
   "missing_requirements": [
     {
-      "id": "REQ-12",
-      "requirement": "Provide a migration path in backend/migration.mo so the live canister state is overwritten with the admin principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' on the next upgrade without losing other data.",
-      "reason": "The diff shows no added or modified backend/migration.mo file. The requirement explicitly mandates a migration.mo run function that seeds or overwrites the admin principal field during canister upgrade.",
-      "evidence": []
+      "id": "REQ-14",
+      "requirement": "Ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin comparison must use caller.toText() and compare it directly against this string. If the admin principal is held in a stable variable, set its default/initial value to this principal so it is authoritative on upgrade.",
+      "reason": "The backend/main.mo diff shows authorization is delegated to an AccessControl module (AccessControl.hasPermission / AccessControl.isAdmin) and a MixinAuthorization. There is no visible isCallerAdmin function using caller.toText() compared against the hardcoded principal string. The stable variable holding the admin principal and its initialization to the required value are not shown, and AccessControl.initState() does not visibly set this principal.",
+      "evidence": [
+        "backend/main.mo"
+      ]
     },
     {
-      "id": "REQ-12",
-      "requirement": "The stored admin principal in the stable variable must be exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae', with isCallerAdmin comparing caller.toText() against this string.",
-      "reason": "The diff shows backend/main.mo using an AccessControl module (AccessControl.isAdmin, AccessControl.hasPermission) rather than directly comparing caller.toText() to the hardcoded principal string. There is no evidence in the diff that this specific principal is stored or used as the initialization default in a stable variable.",
+      "id": "REQ-15",
+      "requirement": "Create or update backend/migration.mo to overwrite the live canister's stored admin principal with 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' during the next canister upgrade, without losing any other stable state.",
+      "reason": "The added backend/migration.mo is a trivial stub: it takes an empty record and returns it unchanged. It does not receive or modify any stable state including the admin principal. The AC requires migration.mo to write the correct admin principal to the stable admin variable on upgrade and preserve all other stable state, neither of which this stub accomplishes.",
+      "evidence": [
+        "backend/migration.mo"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Refactored backend to use an AccessControl module and MixinAuthorization mixin instead of the specified isCallerAdmin pattern",
+      "reason": "The build request specifically requires isCallerAdmin to use caller.toText() compared against the hardcoded string. Instead, the diff introduces AccessControl.hasPermission, AccessControl.isAdmin, AccessControl.initState(), and MixinAuthorization, representing an architectural change beyond what was asked.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "Backend uses MixinStorage blob storage integration",
+      "reason": "The diff shows include MixinStorage() and import MixinStorage from blob-storage/Mixin which were not part of the admin principal fix requirements.",
       "evidence": [
         "backend/main.mo"
       ]
     }
   ],
-  "hallucinated_features": [],
   "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
     "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
     "project_state.json"

@@ -1,58 +1,76 @@
 {
   "kind": "build_request",
-  "title": "Fix backend admin principal so isCallerAdmin grants access to live admin user",
-  "projectName": "Light Art NFT",
+  "title": "Fix backend admin principal and force-set admin to uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae",
+  "projectName": "Istvan Seidel NFT Platform",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-12",
-      "text": "In the backend Motoko actor (backend/main.mo), ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin function (or equivalent authorization check) must compare caller.toText() against this principal. If the admin principal is held in a stable variable, update its initialization default and provide a migration path in backend/migration.mo so the live canister state is overwritten with this value on the next upgrade without losing other data. The error message 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.' must no longer appear for this principal.",
+      "id": "REQ-14",
+      "text": "In backend/main.mo, locate the admin principal storage (stable variable or hardcoded constant) and the isCallerAdmin function (or equivalent authorization check). Ensure the stored admin principal is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'. The isCallerAdmin comparison must use caller.toText() and compare it directly against this string. If the admin principal is held in a stable variable, set its default/initial value to this principal so it is authoritative on upgrade.",
       "target": "backend",
       "source": {
         "messageIds": [
           "msg-latest"
         ],
         "quotes": [
-          "Keine Berechtigung: Nur Admins können Kollektionen verwalten."
+          "Füge meine Principal explizit als Admin hinzu (im Code oder via Admin-Funktion)",
+          "Zeig mir die Motoko-Funktion isAdmin() / hasPermission / admin-check (Principal-Vergleich)"
         ]
       },
       "acceptanceCriteria": [
-        "The admin principal stored in the canister stable state equals 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' after upgrade.",
-        "Calling isCallerAdmin (or the equivalent authorization check) as principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' returns true.",
-        "Collection management operations (create, update, delete) succeed without returning the 'Keine Berechtigung' error when called by this principal.",
-        "No other existing stable state (collections, NFT items, user profiles, minted tokens) is lost during the upgrade.",
-        "migration.mo run function correctly seeds or overwrites the admin principal field during the canister upgrade."
+        "The backend stable variable (or hardcoded constant) for the admin principal is set to exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'",
+        "isCallerAdmin (or equivalent) returns true when called with principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae",
+        "The authorization check in addCollection (and any other admin-gated function) uses isCallerAdmin and no longer returns 'Keine Berechtigung: Nur Admins können Kollektionen verwalten.' for this principal"
       ]
     },
     {
-      "id": "REQ-13",
-      "text": "In the frontend hook useIsCallerAdminWithTimeout, ensure the hardcoded fallback admin principal is 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' and that principal comparisons trim whitespace and normalize to lowercase on both sides. Add or confirm console.log output showing: (1) the current caller's principal text, (2) the hardcoded fallback principal, (3) the result of the backend isCallerAdmin call, so that any remaining mismatch on the live site can be diagnosed immediately.",
+      "id": "REQ-15",
+      "text": "Create or update backend/migration.mo to overwrite the live canister's stored admin principal with 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' during the next canister upgrade, without losing any other stable state (collections, NFT items, user profiles, minted tokens).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-latest"
+        ],
+        "quotes": [
+          "Redeploy Live und teste Kollektion erstellen"
+        ]
+      },
+      "acceptanceCriteria": [
+        "migration.mo writes the correct admin principal to the stable admin variable on upgrade",
+        "All other stable state (collections, NFTs, user profiles) is preserved after upgrade",
+        "After redeployment to the live canister, isCallerAdmin returns true for principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae"
+      ]
+    },
+    {
+      "id": "REQ-16",
+      "text": "In the frontend hook useIsCallerAdminWithTimeout, add or confirm a public query call to the backend's isCallerAdmin method (or equivalent) and log the raw result to the browser console. The console output must include: (1) the caller's principal text, (2) the hardcoded fallback principal, (3) the raw boolean result returned by the backend isCallerAdmin call, and (4) any error thrown. This is to allow immediate diagnosis if a mismatch persists on the live site.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-latest"
         ],
         "quotes": [
-          "Keine Berechtigung: Nur Admins können Kollektionen verwalten."
+          "Teste isAdmin-Call von Live aus – gib Result + Error",
+          "Vergleiche meine aktuelle Principal-ID mit der im Canister gespeicherten Admin-Liste"
         ]
       },
       "acceptanceCriteria": [
-        "The hardcoded fallback string in useIsCallerAdminWithTimeout is exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae'.",
-        "Principal comparisons use .trim().toLowerCase() on both the caller principal and the hardcoded value.",
-        "Browser console logs print the caller principal, fallback principal, and backend isCallerAdmin result during each admin check.",
-        "Admin button and Admin Dashboard are accessible for the principal 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' on the live site."
+        "Opening the browser DevTools console on the live site shows the caller's principal, the hardcoded fallback, the backend isCallerAdmin result, and any error",
+        "The hook does not throw unhandled exceptions; errors are caught and logged",
+        "Admin status resolves correctly (true) for principal uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae after the backend fix is deployed"
       ]
     }
   ],
   "constraints": [
-    "Do not drop or corrupt any existing stable state (collections, NFT items, user profiles, minted tokens) during the backend upgrade.",
-    "Do not edit files listed in frontend.immutablePaths.",
-    "Keep all Motoko logic in backend/main.mo (single-actor architecture)."
+    "Do not lose any existing stable state (collections, NFT items, user profiles, minted tokens) during the canister upgrade",
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui",
+    "The admin principal must be exactly 'uorkh-nazas-r5n3p-kj44w-gwm4i-liaj3-jqjll-ws44w-7dlve-3mshw-sae' — no other value"
   ],
   "nonGoals": [
-    "UI redesign or visual changes.",
-    "Adding new features beyond fixing admin access.",
-    "Changing the authentication mechanism away from Internet Identity."
+    "Adding a multi-admin management UI",
+    "Changing any NFT minting or collection display logic",
+    "UI redesign or styling changes",
+    "Adding new backend endpoints beyond what is needed for admin authorization"
   ],
   "imageRequirements": {
     "required": [],
