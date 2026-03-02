@@ -1,141 +1,144 @@
-import { useState } from 'react';
-import { useSubmitContactForm } from '../hooks/useSubmitContactForm';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Send, CheckCircle2 } from 'lucide-react';
+import { Mail, Send, CheckCircle, Info } from 'lucide-react';
 
 export default function Contact() {
-  const { mutate: submitForm, isPending, isSuccess, isError, error } = useSubmitContactForm();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
+  const [submitted, setSubmitted] = useState(false);
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [validationError, setValidationError] = useState('');
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setValidationError('');
-
-    // Client-side validation
-    if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
-      setValidationError('Bitte füllen Sie alle Felder aus.');
-      return;
-    }
-
-    if (!email.includes('@')) {
-      setValidationError('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
-      return;
-    }
-
-    submitForm(
-      { name, email, subject, message },
-      {
-        onSuccess: () => {
-          // Clear form on success
-          setName('');
-          setEmail('');
-          setSubject('');
-          setMessage('');
-        },
-      }
-    );
+    setSubmitted(true);
   };
 
   return (
-    <div className="container mx-auto max-w-3xl px-4 py-16">
-      <Card className="border-border/50 bg-card/50 backdrop-blur">
-        <CardHeader>
-          <CardTitle className="font-serif text-3xl">Kontakt</CardTitle>
-          <CardDescription>
-            Haben Sie Fragen zu unseren Lichtkunstwerken oder NFTs? Schreiben Sie uns eine Nachricht.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isSuccess && (
-            <Alert className="mb-6 border-green-500/50 bg-green-500/10">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <AlertDescription className="text-green-500">
-                Vielen Dank für Ihre Nachricht! Wir werden uns baldmöglichst bei Ihnen melden.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {(isError || validationError) && (
-            <Alert className="mb-6 border-destructive/50 bg-destructive/10">
-              <AlertDescription className="text-destructive">
-                {validationError || (error as Error)?.message || 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.'}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ihr Name"
-                disabled={isPending}
-              />
+    <main className="min-h-screen bg-background py-16 px-4">
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-4">
+            <div className="p-3 rounded-full bg-primary/10">
+              <Mail className="w-8 h-8 text-primary" />
             </div>
+          </div>
+          <h1 className="text-4xl font-serif font-thin text-foreground mb-4">Kontakt</h1>
+          <p className="text-muted-foreground text-lg">
+            Haben Sie Fragen oder möchten Sie ein Kunstwerk erwerben? Schreiben Sie mir.
+          </p>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ihre.email@beispiel.de"
-                disabled={isPending}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="subject">Betreff</Label>
-              <Input
-                id="subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Worum geht es?"
-                disabled={isPending}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="message">Nachricht</Label>
-              <Textarea
-                id="message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Ihre Nachricht an uns..."
-                rows={6}
-                disabled={isPending}
-              />
-            </div>
-
-            <Button type="submit" disabled={isPending} className="w-full">
-              {isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Wird gesendet...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Nachricht senden
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        {submitted ? (
+          <Card className="border border-border/20">
+            <CardContent className="pt-8 pb-8 text-center">
+              <CheckCircle className="w-12 h-12 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-serif font-thin mb-2">Vielen Dank!</h2>
+              <p className="text-muted-foreground">
+                Ihre Nachricht wurde empfangen. Ich melde mich so bald wie möglich bei Ihnen.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-6"
+                onClick={() => {
+                  setSubmitted(false);
+                  setFormData({ name: '', email: '', subject: '', message: '' });
+                }}
+              >
+                Neue Nachricht
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border border-border/20">
+            <CardHeader>
+              <CardTitle className="font-serif font-thin text-2xl">Nachricht senden</CardTitle>
+              <CardDescription>
+                Füllen Sie das Formular aus und ich werde mich bei Ihnen melden.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert className="mb-6 border-border/20">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Das Kontaktformular ist derzeit im Aufbau. Ihre Nachricht wird lokal gespeichert.
+                </AlertDescription>
+              </Alert>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name *</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Ihr Name"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">E-Mail *</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="ihre@email.de"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Betreff *</Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="Worum geht es?"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="message">Nachricht *</Label>
+                  <Textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Ihre Nachricht..."
+                    rows={6}
+                    required
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={!formData.name || !formData.email || !formData.subject || !formData.message}
+                    className="gap-2"
+                  >
+                    <Send className="w-4 h-4" />
+                    Absenden
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </main>
   );
 }

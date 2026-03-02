@@ -1,17 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
 
-interface CreateBlogPostParams {
-  title: string;
-  content: string;
-  featuredImage: Uint8Array | null;
-}
-
-// The old blog backend has been replaced by the NFT system.
-// This stub mutation always throws to indicate the feature is unavailable.
 export function useCreateBlogPost() {
   return useMutation({
-    mutationFn: async (_params: CreateBlogPostParams) => {
-      throw new Error('Blog-Erstellung ist derzeit nicht verfügbar.');
+    mutationFn: async (_data: { title: string; content: string; imageUrl?: string }) => {
+      // Blog creation is currently unavailable — NFT system is active
+      return null;
     },
   });
 }

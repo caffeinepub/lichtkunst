@@ -1,77 +1,35 @@
 {
   "kind": "build_request",
-  "title": "Hardcode admin principal in backend and remove blocking admin checks for collection creation",
-  "projectName": "Istvan Seidel NFT",
-  "priority": "high",
+  "title": "Retry failed deployment",
+  "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "In the Motoko backend (backend/main.mo), replace or update the isAdmin() / isCallerAdmin() function so that it hardcodes the caller's Principal ID as a permanent admin. Add the user's Principal to an `adminPrincipals` array (or equivalent structure) and ensure the function returns `true` when `msg.caller` matches any entry in that array. Remove or bypass any other admin validation logic (e.g., token-based checks, registry lookups) that currently blocks the admin check from succeeding.",
-      "target": "backend",
+      "text": "Review the current backend and frontend code for any compilation errors, syntax issues, or configuration problems that may have caused the deployment to fail, fix them, and redeploy the application successfully.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-1",
+          "msg-2"
         ],
         "quotes": [
-          "Hardcode meine Principal [deine Principal-ID einfügen] als Admin – ersetze jede Bedingung, füge zu adminPrincipals-Array hinzu oder return true wenn caller == meine ID.",
-          "Entferne vorübergehend jeden anderen Check (z. B. if not isAdmin then throw)."
+          "why?",
+          "ja"
         ]
       },
       "acceptanceCriteria": [
-        "The `isAdmin()` / `isCallerAdmin()` function in main.mo contains a hardcoded `adminPrincipals` array with the user's Principal ID.",
-        "When `msg.caller` matches the hardcoded Principal, the function returns `true` without any further checks.",
-        "No other guard or condition can override or short-circuit this admin grant (e.g., token checks, external registry calls are removed or bypassed).",
-        "The function compiles without errors."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "In the Motoko backend, ensure the `createCollection` (or equivalent collection-creation) function logs / exposes `msg.caller` in its response or error so that the admin Principal can be confirmed at runtime. If the function throws an authorization error, it must only do so when `isAdmin(msg.caller)` returns `false`; with the hardcoded Principal it must succeed and return the new collection.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "Hole msg.caller Principal-ID im Backend bei Kollektion-erstellen-Call.",
-          "Entferne vorübergehend jeden anderen Check (z. B. if not isAdmin then throw)."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Calling `createCollection` as the hardcoded admin Principal succeeds and returns the created collection.",
-        "The function does not throw an authorization error for the hardcoded admin Principal.",
-        "If the caller is not in `adminPrincipals`, the function still rejects with a clear error message."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Update the frontend `useIsCallerAdminWithTimeout` hook and any related admin-check hooks so that the hardcoded admin Principal used on the frontend matches the one now hardcoded in the backend. Ensure the admin navigation link and admin dashboard are immediately accessible for the hardcoded admin without requiring a backend round-trip timeout fallback.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-recent"
-        ],
-        "quotes": [
-          "Hardcode meine Principal [deine Principal-ID einfügen] als Admin"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The hardcoded admin Principal in `useIsCallerAdminWithTimeout` matches the one in the backend.",
-        "When logged in as the hardcoded admin, the Admin nav link appears immediately.",
-        "The admin dashboard loads without a permission error when accessed by the hardcoded admin."
+        "The application compiles without errors in both backend (Motoko) and frontend (TypeScript/React)",
+        "The deployment completes successfully without timeout or network errors",
+        "The live application is accessible and functional after deployment"
       ]
     }
   ],
   "constraints": [
-    "Do not remove the adminPrincipals array mechanism — only ensure the user's Principal is included and takes priority.",
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, or frontend/src/components/ui.",
-    "Keep all Motoko logic in backend/main.mo (single-actor architecture)."
+    "Do not change any existing features or data models — this is a fix-and-redeploy only"
   ],
   "nonGoals": [
-    "Adding a UI for managing admin principals dynamically.",
-    "Implementing a token-based or registry-based admin system.",
-    "Changing any NFT minting, gallery, or blog functionality.",
-    "Deploying or testing outside the Caffeine platform."
+    "Adding new features",
+    "Changing existing UI or backend logic beyond what is needed to fix deployment errors"
   ],
   "imageRequirements": {
     "required": [],

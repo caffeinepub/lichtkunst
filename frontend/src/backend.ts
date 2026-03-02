@@ -89,37 +89,25 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface MintRequest {
-    title: string;
-    description: string;
-    image: ExternalBlob;
-}
-export interface NFTCollection {
-    id: string;
-    name: string;
-    createdAt: bigint;
-    description: string;
+export interface _CaffeineStorageRefillResult {
+    success?: boolean;
+    topped_up_amount?: bigint;
 }
 export type TokenId = bigint;
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
 export interface NFTItem {
-    id: string;
+    id: NFTId;
     title: string;
     tokenId?: bigint;
     imageData: ExternalBlob;
-    collectionId: string;
+    collectionId: CollectionId;
     owner?: Principal;
     minted: boolean;
     description: string;
     mintedAt?: bigint;
     price: bigint;
-}
-export interface NFTMetadata {
-    title: string;
-    description: string;
-    image: ExternalBlob;
 }
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
@@ -131,12 +119,26 @@ export interface NFT {
     metadata: NFTMetadata;
     mintedAt: bigint;
 }
+export interface MintRequest {
+    title: string;
+    description: string;
+    image: ExternalBlob;
+}
+export interface NFTCollection {
+    id: CollectionId;
+    name: string;
+    createdAt: bigint;
+    description: string;
+}
+export interface NFTMetadata {
+    title: string;
+    description: string;
+    image: ExternalBlob;
+}
+export type CollectionId = string;
+export type NFTId = string;
 export interface UserProfile {
     name: string;
-}
-export interface _CaffeineStorageRefillResult {
-    success?: boolean;
-    topped_up_amount?: bigint;
 }
 export enum UserRole {
     admin = "admin",
@@ -151,20 +153,20 @@ export interface backendInterface {
     _caffeineStorageRefillCashier(refillInformation: _CaffeineStorageRefillInformation | null): Promise<_CaffeineStorageRefillResult>;
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
-    addCollection(id: string, name: string, description: string): Promise<void>;
-    addNFT(id: string, collectionId: string, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
+    addCollection(id: CollectionId, name: string, description: string): Promise<void>;
+    addNFT(id: string, collectionId: CollectionId, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     checkIsAdmin(): Promise<boolean>;
     countMyNFTs(): Promise<bigint>;
-    deleteCollection(id: string): Promise<void>;
-    deleteNFT(id: string): Promise<void>;
+    deleteCollection(id: CollectionId): Promise<void>;
+    deleteNFT(id: NFTId): Promise<void>;
     getAllCollections(): Promise<Array<NFTCollection>>;
     getAllNFTs(): Promise<Array<NFTItem>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getIssuedNFT(tokenId: TokenId): Promise<NFT | null>;
-    getNFT(id: string): Promise<NFTItem | null>;
-    getNFTsByCollection(collectionId: string): Promise<Array<NFTItem>>;
+    getNFT(id: NFTId): Promise<NFTItem | null>;
+    getNFTsByCollection(collectionId: CollectionId): Promise<Array<NFTItem>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     listAllNFTs(): Promise<Array<NFT>>;
@@ -172,11 +174,11 @@ export interface backendInterface {
     listNFTsByPrincipal(principal: Principal): Promise<Array<NFT>>;
     mintNFT(request: MintRequest): Promise<TokenId>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    updateCollection(id: string, name: string, description: string): Promise<void>;
-    updateNFT(id: string, collectionId: string, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
+    updateCollection(id: CollectionId, name: string, description: string): Promise<void>;
+    updateNFT(id: string, collectionId: CollectionId, title: string, description: string, imageData: ExternalBlob, price: bigint): Promise<void>;
     uploadImage(blob: ExternalBlob): Promise<ExternalBlob>;
 }
-import type { ExternalBlob as _ExternalBlob, MintRequest as _MintRequest, NFT as _NFT, NFTItem as _NFTItem, NFTMetadata as _NFTMetadata, TokenId as _TokenId, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { CollectionId as _CollectionId, ExternalBlob as _ExternalBlob, MintRequest as _MintRequest, NFT as _NFT, NFTId as _NFTId, NFTItem as _NFTItem, NFTMetadata as _NFTMetadata, TokenId as _TokenId, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -277,7 +279,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addCollection(arg0: string, arg1: string, arg2: string): Promise<void> {
+    async addCollection(arg0: CollectionId, arg1: string, arg2: string): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.addCollection(arg0, arg1, arg2);
@@ -291,7 +293,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addNFT(arg0: string, arg1: string, arg2: string, arg3: string, arg4: ExternalBlob, arg5: bigint): Promise<void> {
+    async addNFT(arg0: string, arg1: CollectionId, arg2: string, arg3: string, arg4: ExternalBlob, arg5: bigint): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.addNFT(arg0, arg1, arg2, arg3, await to_candid_ExternalBlob_n8(this._uploadFile, this._downloadFile, arg4), arg5);
@@ -347,7 +349,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async deleteCollection(arg0: string): Promise<void> {
+    async deleteCollection(arg0: CollectionId): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.deleteCollection(arg0);
@@ -361,7 +363,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async deleteNFT(arg0: string): Promise<void> {
+    async deleteNFT(arg0: NFTId): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.deleteNFT(arg0);
@@ -445,7 +447,7 @@ export class Backend implements backendInterface {
             return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getNFT(arg0: string): Promise<NFTItem | null> {
+    async getNFT(arg0: NFTId): Promise<NFTItem | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getNFT(arg0);
@@ -459,7 +461,7 @@ export class Backend implements backendInterface {
             return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getNFTsByCollection(arg0: string): Promise<Array<NFTItem>> {
+    async getNFTsByCollection(arg0: CollectionId): Promise<Array<NFTItem>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getNFTsByCollection(arg0);
@@ -571,7 +573,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateCollection(arg0: string, arg1: string, arg2: string): Promise<void> {
+    async updateCollection(arg0: CollectionId, arg1: string, arg2: string): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.updateCollection(arg0, arg1, arg2);
@@ -585,7 +587,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateNFT(arg0: string, arg1: string, arg2: string, arg3: string, arg4: ExternalBlob, arg5: bigint): Promise<void> {
+    async updateNFT(arg0: string, arg1: CollectionId, arg2: string, arg3: string, arg4: ExternalBlob, arg5: bigint): Promise<void> {
         if (this.processError) {
             try {
                 const result = await this.actor.updateNFT(arg0, arg1, arg2, arg3, await to_candid_ExternalBlob_n8(this._uploadFile, this._downloadFile, arg4), arg5);
@@ -654,22 +656,22 @@ function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
     return value.length === 0 ? null : value[0];
 }
 async function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: string;
+    id: _NFTId;
     title: string;
     tokenId: [] | [bigint];
     imageData: _ExternalBlob;
-    collectionId: string;
+    collectionId: _CollectionId;
     owner: [] | [Principal];
     minted: boolean;
     description: string;
     mintedAt: [] | [bigint];
     price: bigint;
 }): Promise<{
-    id: string;
+    id: NFTId;
     title: string;
     tokenId?: bigint;
     imageData: ExternalBlob;
-    collectionId: string;
+    collectionId: CollectionId;
     owner?: Principal;
     minted: boolean;
     description: string;

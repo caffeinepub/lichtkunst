@@ -9,22 +9,23 @@ import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
-import Migration "migration";
 
-(with migration = Migration.run)
 actor {
+  type CollectionId = Text;
+  type NFTId = Text;
   type TokenId = Nat;
+  type UserProfileId = Principal;
 
   public type NFTCollection = {
-    id : Text;
+    id : CollectionId;
     name : Text;
     description : Text;
     createdAt : Int;
   };
 
   public type NFTItem = {
-    id : Text;
-    collectionId : Text;
+    id : NFTId;
+    collectionId : CollectionId;
     title : Text;
     description : Text;
     imageData : Storage.ExternalBlob;
@@ -58,11 +59,11 @@ actor {
     image : Storage.ExternalBlob;
   };
 
-  let collections = Map.empty<Text, NFTCollection>();
-  let nfts = Map.empty<Text, NFTItem>();
-  let userProfiles = Map.empty<Principal, UserProfile>();
+  let collections = Map.empty<CollectionId, NFTCollection>();
+  let nfts = Map.empty<NFTId, NFTItem>();
+  let userProfiles = Map.empty<UserProfileId, UserProfile>();
   let issuedNFTs = Map.empty<TokenId, NFT>();
-  let userNFTs = Map.empty<Principal, [TokenId]>();
+  let userNFTs = Map.empty<UserProfileId, [TokenId]>();
 
   var nextTokenId = 1;
 
@@ -103,7 +104,7 @@ actor {
     mapToArray(nfts);
   };
 
-  public query func getNFTsByCollection(collectionId : Text) : async [NFTItem] {
+  public query func getNFTsByCollection(collectionId : CollectionId) : async [NFTItem] {
     mapToArray(nfts).filter(
       func(nft) {
         nft.collectionId == collectionId;
@@ -111,11 +112,11 @@ actor {
     );
   };
 
-  public query func getNFT(id : Text) : async ?NFTItem {
+  public query func getNFT(id : NFTId) : async ?NFTItem {
     nfts.get(id);
   };
 
-  public shared ({ caller }) func addCollection(id : Text, name : Text, description : Text) : async () {
+  public shared ({ caller }) func addCollection(id : CollectionId, name : Text, description : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can add collections");
     };
@@ -128,7 +129,7 @@ actor {
     collections.add(id, collection);
   };
 
-  public shared ({ caller }) func updateCollection(id : Text, name : Text, description : Text) : async () {
+  public shared ({ caller }) func updateCollection(id : CollectionId, name : Text, description : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can update collections");
     };
@@ -146,7 +147,7 @@ actor {
     };
   };
 
-  public shared ({ caller }) func deleteCollection(id : Text) : async () {
+  public shared ({ caller }) func deleteCollection(id : CollectionId) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete collections");
     };
@@ -171,7 +172,7 @@ actor {
 
   public shared ({ caller }) func addNFT(
     id : Text,
-    collectionId : Text,
+    collectionId : CollectionId,
     title : Text,
     description : Text,
     imageData : Storage.ExternalBlob,
@@ -204,7 +205,7 @@ actor {
 
   public shared ({ caller }) func updateNFT(
     id : Text,
-    collectionId : Text,
+    collectionId : CollectionId,
     title : Text,
     description : Text,
     imageData : Storage.ExternalBlob,
@@ -233,7 +234,7 @@ actor {
     };
   };
 
-  public shared ({ caller }) func deleteNFT(id : Text) : async () {
+  public shared ({ caller }) func deleteNFT(id : NFTId) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can delete NFTs");
     };

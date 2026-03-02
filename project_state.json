@@ -1,51 +1,22 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "ICP/Motoko-based NFT collection management app with admin access control. User is working on hardcoding admin principal and fixing collection creation permissions in Motoko backend.",
-  "architectural_notes": [
-    "Backend is written in Motoko (ICP canister), uses msg.caller for Principal-based admin authentication",
-    "Admin validation uses isAdmin() function with an adminPrincipals array or hardcoded check"
-  ],
-  "known_issues": [
-    "Admin permission check blocks collection creation — user cannot create collections due to failed isAdmin() validation"
-  ],
-  "isFixRequest": true,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-frontend-useiscalleradminwithtimeout-hook-and-any-related-admin-check-hooks-so-that-the-hardcoded-admin-principal-used-on-the-frontend-matches-the-one-now-hardcoded-in-the-backend-ensure-the-admin-navigation-link-and-admin-dashboard-are-immediately-accessible-for-the-hardcoded-admin-without-requiring-a-backend-round-trip-timeout-fallback",
-      "title": "Update the frontend `useIsCallerAdminWithTimeout` hook and any related admin-check hooks so that the hardcoded admin Principal used on the frontend matches the one now hardcoded in the backend. Ensure the admin navigation link and admin dashboard are immediately accessible for the hardcoded admin without requiring a backend round-trip timeout fallback.",
+      "id": "feature-review-the-current-backend-and-frontend-code-for-any-compilation-errors-syntax-issues-or-configuration-problems-that-may-have-caused-the-deployment-to-fail-fix-them-and-redeploy-the-application-successfully",
+      "title": "Review the current backend and frontend code for any compilation errors, syntax issues, or configuration problems that may have caused the deployment to fail, fix them, and redeploy the application successfully.",
       "reqIds": [
-        "REQ-3"
+        "REQ-1"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Hardcode admin Principal ID in Motoko backend and remove all other admin checks so collection creation works",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "In the Motoko backend (backend/main.mo), replace or update the isAdmin() / isCallerAdmin() function so that it hardcodes the caller's Principal ID as a permanent admin. Add the user's Principal to an `adminPrincipals` array (or equivalent structure) and ensure the function returns `true` when `msg.caller` matches any entry in that array. Remove or bypass any other admin validation logic (e.g., token-based checks, registry lookups) that currently blocks the admin check from succeeding.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "In the Motoko backend, ensure the `createCollection` (or equivalent collection-creation) function logs / exposes `msg.caller` in its response or error so that the admin Principal can be confirmed at runtime. If the function throws an authorization error, it must only do so when `isAdmin(msg.caller)` returns `false`; with the hardcoded Principal it must succeed and return the new collection.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    }
-  ],
-  "gameProjectType": "none",
-  "projectName": "Istvan Seidel NFT",
+  "new_feature_requests": [],
+  "projectName": "Retry failed deployment",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

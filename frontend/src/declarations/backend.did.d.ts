@@ -10,6 +10,7 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export type CollectionId = string;
 export type ExternalBlob = Uint8Array;
 export interface MintRequest {
   'title' : string,
@@ -23,17 +24,18 @@ export interface NFT {
   'mintedAt' : bigint,
 }
 export interface NFTCollection {
-  'id' : string,
+  'id' : CollectionId,
   'name' : string,
   'createdAt' : bigint,
   'description' : string,
 }
+export type NFTId = string;
 export interface NFTItem {
-  'id' : string,
+  'id' : NFTId,
   'title' : string,
   'tokenId' : [] | [bigint],
   'imageData' : ExternalBlob,
-  'collectionId' : string,
+  'collectionId' : CollectionId,
   'owner' : [] | [Principal],
   'minted' : boolean,
   'description' : string,
@@ -78,23 +80,23 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addCollection' : ActorMethod<[string, string, string], undefined>,
+  'addCollection' : ActorMethod<[CollectionId, string, string], undefined>,
   'addNFT' : ActorMethod<
-    [string, string, string, string, ExternalBlob, bigint],
+    [string, CollectionId, string, string, ExternalBlob, bigint],
     undefined
   >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'checkIsAdmin' : ActorMethod<[], boolean>,
   'countMyNFTs' : ActorMethod<[], bigint>,
-  'deleteCollection' : ActorMethod<[string], undefined>,
-  'deleteNFT' : ActorMethod<[string], undefined>,
+  'deleteCollection' : ActorMethod<[CollectionId], undefined>,
+  'deleteNFT' : ActorMethod<[NFTId], undefined>,
   'getAllCollections' : ActorMethod<[], Array<NFTCollection>>,
   'getAllNFTs' : ActorMethod<[], Array<NFTItem>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getIssuedNFT' : ActorMethod<[TokenId], [] | [NFT]>,
-  'getNFT' : ActorMethod<[string], [] | [NFTItem]>,
-  'getNFTsByCollection' : ActorMethod<[string], Array<NFTItem>>,
+  'getNFT' : ActorMethod<[NFTId], [] | [NFTItem]>,
+  'getNFTsByCollection' : ActorMethod<[CollectionId], Array<NFTItem>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listAllNFTs' : ActorMethod<[], Array<NFT>>,
@@ -102,9 +104,9 @@ export interface _SERVICE {
   'listNFTsByPrincipal' : ActorMethod<[Principal], Array<NFT>>,
   'mintNFT' : ActorMethod<[MintRequest], TokenId>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'updateCollection' : ActorMethod<[string, string, string], undefined>,
+  'updateCollection' : ActorMethod<[CollectionId, string, string], undefined>,
   'updateNFT' : ActorMethod<
-    [string, string, string, string, ExternalBlob, bigint],
+    [string, CollectionId, string, string, ExternalBlob, bigint],
     undefined
   >,
   'uploadImage' : ActorMethod<[ExternalBlob], ExternalBlob>,
