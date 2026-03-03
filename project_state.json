@@ -1,22 +1,43 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [],
-  "isFixRequest": false,
+  "summary": "NFT platform project with admin functionality for creating collections. User is experiencing issues where the live (production) version is missing the Admin button for creating collections, while the draft version has it. Fix is being attempted.",
+  "architectural_notes": [
+    "Admin panel with collection creation functionality must be present in production builds, not just draft."
+  ],
+  "known_issues": [
+    "Live version is missing the Admin button for creating collections; draft version has it but production does not reflect the same state."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-review-the-current-backend-and-frontend-code-for-any-compilation-errors-syntax-issues-or-configuration-problems-that-may-have-caused-the-deployment-to-fail-fix-them-and-redeploy-the-application-successfully",
-      "title": "Review the current backend and frontend code for any compilation errors, syntax issues, or configuration problems that may have caused the deployment to fail, fix them, and redeploy the application successfully.",
+      "id": "feature-ensure-the-admin-navigation-link-is-always-rendered-in-the-navigation-component-for-authenticated-admin-users-the-navigation-component-must-reliably-show-the-admin-link-when-the-backend-confirms-admin-status-via-useiscalleradminwithtimeout-without-any-code-path-silently-hiding-or-omitting-it-in-production-builds",
+      "title": "Ensure the Admin navigation link is always rendered in the Navigation component for authenticated admin users. The Navigation component must reliably show the 'Admin' link when the backend confirms admin status via useIsCallerAdminWithTimeout, without any code path silently hiding or omitting it in production builds.",
       "reqIds": [
         "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admindashboard-page-renders-the-collection-creation-form-admincollectionform-and-the-nft-management-tabs-correctly-in-production-verify-that-no-conditional-logic-or-environment-specific-code-path-prevents-the-admin-ui-from-loading-on-the-live-deployment",
+      "title": "Ensure the AdminDashboard page renders the collection creation form (AdminCollectionForm) and the NFT management tabs correctly in production. Verify that no conditional logic or environment-specific code path prevents the admin UI from loading on the live deployment.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-audit-and-fix-the-useiscalleradminwithtimeout-and-useiscalleradmin-hooks-to-ensure-admin-status-is-correctly-detected-and-not-timing-out-prematurely-in-production-which-would-cause-the-admin-link-and-dashboard-to-be-hidden-even-for-valid-admins",
+      "title": "Audit and fix the useIsCallerAdminWithTimeout and useIsCallerAdmin hooks to ensure admin status is correctly detected and not timing out prematurely in production, which would cause the Admin link and dashboard to be hidden even for valid admins.",
+      "reqIds": [
+        "REQ-3"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [],
-  "projectName": "Retry failed deployment",
+  "gameProjectType": "none",
+  "projectName": "Istvan Seidel NFT Platform",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

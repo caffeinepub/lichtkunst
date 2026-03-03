@@ -1,35 +1,72 @@
 {
   "kind": "build_request",
-  "title": "Retry failed deployment",
-  "priority": "normal",
+  "title": "Restore Admin button and collection creation in production",
+  "projectName": "Istvan Seidel NFT Platform",
+  "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Review the current backend and frontend code for any compilation errors, syntax issues, or configuration problems that may have caused the deployment to fail, fix them, and redeploy the application successfully.",
-      "target": "both",
+      "text": "Ensure the Admin navigation link is always rendered in the Navigation component for authenticated admin users. The Navigation component must reliably show the 'Admin' link when the backend confirms admin status via useIsCallerAdminWithTimeout, without any code path silently hiding or omitting it in production builds.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2"
+          "msg-20"
         ],
         "quotes": [
-          "why?",
-          "ja"
+          "Ich finde in der Live Version keinen Admin Buttom, über den ich eine Kollektion erstellen kann"
         ]
       },
       "acceptanceCriteria": [
-        "The application compiles without errors in both backend (Motoko) and frontend (TypeScript/React)",
-        "The deployment completes successfully without timeout or network errors",
-        "The live application is accessible and functional after deployment"
+        "When logged in as an admin, the Admin link is visible in the navigation bar in the live/production deployment.",
+        "Clicking the Admin link routes to the AdminDashboard page.",
+        "Non-admin users do not see the Admin link."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Ensure the AdminDashboard page renders the collection creation form (AdminCollectionForm) and the NFT management tabs correctly in production. Verify that no conditional logic or environment-specific code path prevents the admin UI from loading on the live deployment.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Die Draft Version ist ganz anders als die Life Version"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The AdminDashboard page displays the Collections tab with the ability to create a new collection via AdminCollectionForm.",
+        "The AdminDashboard page displays the NFTs tab with the ability to create/edit NFTs via AdminNFTForm.",
+        "The admin dashboard works identically in both draft and live deployments."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Audit and fix the useIsCallerAdminWithTimeout and useIsCallerAdmin hooks to ensure admin status is correctly detected and not timing out prematurely in production, which would cause the Admin link and dashboard to be hidden even for valid admins.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-20"
+        ],
+        "quotes": [
+          "Ich finde in der Live Version keinen Admin Buttom"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin status check completes successfully on the live deployment without prematurely hitting the timeout phase.",
+        "If the admin check fails or times out, a retry button is shown rather than silently hiding the Admin link.",
+        "Console errors related to admin status detection are resolved."
       ]
     }
   ],
   "constraints": [
-    "Do not change any existing features or data models — this is a fix-and-redeploy only"
+    "Do not modify files listed in frontend.immutablePaths.",
+    "Do not change the backend data model or actor interface."
   ],
   "nonGoals": [
-    "Adding new features",
-    "Changing existing UI or backend logic beyond what is needed to fix deployment errors"
+    "Adding new admin features beyond what already exists in the draft version.",
+    "Changing the visual design or layout of the admin dashboard.",
+    "Modifying blog or artwork-related components."
   ],
   "imageRequirements": {
     "required": [],

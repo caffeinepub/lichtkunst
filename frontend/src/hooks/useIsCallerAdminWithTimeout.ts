@@ -1,105 +1,120 @@
-import { useEffect, useRef, useState } from 'react';
-import { useInternetIdentity } from './useInternetIdentity';
-import { useActor } from './useActor';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useActor } from "./useActor";
+import { useInternetIdentity } from "./useInternetIdentity";
 
-export type AdminPhase =
-  | 'initializing'
-  | 'waiting-for-actor'
-  | 'checking'
-  | 'confirmed'
-  | 'denied'
-  | 'error'
-  | 'timeout';
+export type AdminCheckPhase =
+  | "initializing"
+  | "waiting-for-actor"
+  | "checking"
+  | "confirmed"
+  | "denied"
+  | "timeout"
+  | "error";
 
-export interface AdminCheckResult {
-  phase: AdminPhase;
+export interface UseIsCallerAdminWithTimeoutResult {
+  phase: AdminCheckPhase;
   isAdmin: boolean;
   retry: () => void;
+  errorMessage?: string;
 }
 
-const DEFAULT_TIMEOUT_MS = 15000;
-
-export function useIsCallerAdminWithTimeout(timeoutMs: number = DEFAULT_TIMEOUT_MS): AdminCheckResult {
-  const { identity, isInitializing } = useInternetIdentity();
+export function useIsCallerAdminWithTimeout(): UseIsCallerAdminWithTimeoutResult {
   const { actor, isFetching: actorFetching } = useActor();
-  const [phase, setPhase] = useState<AdminPhase>('initializing');
+  const { identity, isInitializing } = useInternetIdentity();
+
+  const [phase, setPhase] = useState<AdminCheckPhase>("initializing");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [retryCount, setRetryCount] = useState(0);
+
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const checkedRef = useRef(false);
+  const checkDoneRef = useRef(false);
 
-  const retry = () => {
-    checkedRef.current = false;
-    setRetryCount(c => c + 1);
-    setPhase('initializing');
-  };
-
-  useEffect(() => {
-    // Clear any existing timeout
+  const clearTimer = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+  }, []);
 
-    checkedRef.current = false;
+  const retry = useCallback(() => {
+    clearTimer();
+    checkDoneRef.current = false;
+    setPhase("initializing");
+    setIsAdmin(false);
+    setErrorMessage(undefined);
+    setRetryCount((c) => c + 1);
+  }, [clearTimer]);
 
+  useEffect(() => {
     // Still initializing identity
     if (isInitializing) {
-      setPhase('initializing');
+      setPhase("initializing");
       return;
     }
 
-    // Not logged in — deny immediately
+    // Not authenticated — no admin check needed
     if (!identity) {
-      setPhase('denied');
+      setPhase("denied");
+      setIsAdmin(false);
       return;
     }
 
-    // Actor not ready yet — wait for it
+    // Actor not ready yet
     if (actorFetching || !actor) {
-      setPhase('waiting-for-actor');
-
-      timeoutRef.current = setTimeout(() => {
-        if (!checkedRef.current) {
-          setPhase('timeout');
-        }
-      }, timeoutMs);
+      setPhase("waiting-for-actor");
       return;
     }
 
-    // Actor is ready — perform backend check
-    setPhase('checking');
+    // Already completed this check
+    if (checkDoneRef.current) return;
 
-    const performCheck = async () => {
-      try {
-        // Use checkIsAdmin() which is a query call (faster, no consensus needed)
-        const result = await actor.checkIsAdmin();
-        checkedRef.current = true;
-        setPhase(result ? 'confirmed' : 'denied');
-      } catch (err: unknown) {
-        checkedRef.current = true;
-        console.error('[AdminCheck] checkIsAdmin() error:', err);
-        setPhase('error');
-      }
-    };
+    // Start the admin check
+    checkDoneRef.current = true;
+    setPhase("checking");
 
-    // Set timeout for backend check
+    // Set a 30-second timeout for production network conditions
     timeoutRef.current = setTimeout(() => {
-      if (!checkedRef.current) {
-        setPhase('timeout');
+      if (phase !== "confirmed" && phase !== "denied" && phase !== "error") {
+        setPhase("timeout");
+        setErrorMessage("Admin-Prüfung hat zu lange gedauert. Bitte erneut versuchen.");
       }
-    }, timeoutMs);
+    }, 30_000);
 
-    performCheck();
+    async function checkAdmin() {
+      try {
+        // Try checkIsAdmin (query call) first
+        let result = false;
+        try {
+          result = await actor!.checkIsAdmin();
+        } catch (queryErr) {
+          // Fallback to isCallerAdmin (update call)
+          try {
+            result = await actor!.isCallerAdmin();
+          } catch (updateErr) {
+            throw updateErr;
+          }
+        }
+
+        clearTimer();
+        setIsAdmin(result);
+        setPhase(result ? "confirmed" : "denied");
+      } catch (err: any) {
+        clearTimer();
+        const msg = err?.message ?? String(err);
+        setErrorMessage(msg);
+        setPhase("error");
+        setIsAdmin(false);
+      }
+    }
+
+    checkAdmin();
 
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
+      clearTimer();
     };
-  }, [identity, isInitializing, actor, actorFetching, retryCount, timeoutMs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actor, actorFetching, identity, isInitializing, retryCount]);
 
-  const isAdmin = phase === 'confirmed';
-
-  return { phase, isAdmin, retry };
+  return { phase, isAdmin, retry, errorMessage };
 }

@@ -1,71 +1,73 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix deployment errors and redeploy successfully",
+  "title": "Restore Admin button and collection creation in production",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Review and fix compilation errors, syntax issues, or configuration problems preventing successful deployment",
+      "summary": "Ensure the Admin navigation link is always rendered for authenticated admin users without being silently hidden in production builds",
       "acceptanceCriteria": [
-        "The application compiles without errors in both backend (Motoko) and frontend (TypeScript/React)",
-        "The deployment completes successfully without timeout or network errors",
-        "The live application is accessible and functional after deployment"
+        "When logged in as an admin, the Admin link is visible in the navigation bar in the live/production deployment.",
+        "Clicking the Admin link routes to the AdminDashboard page.",
+        "Non-admin users do not see the Admin link."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/ProfileSetupModal.tsx",
+          "path": "frontend/src/components/Navigation.tsx",
           "operation": "modify",
-          "description": "Add missing ProfileSetupModal implementation. This file is currently empty but is imported by other components. Implement a modal that checks if the user has a profile using useGetCallerUserProfile hook, and if null, prompts for name input and saves via useSaveCallerUserProfile mutation. Follow the authorization component's pattern for preventing modal flash by checking both actor readiness and profile fetch completion before showing the modal."
+          "description": "Review and fix the conditional logic that renders the Admin link. Ensure that when useIsCallerAdminWithTimeout confirms admin status (phase === 'confirmed' && isAdmin === true), the Admin link is unconditionally rendered. Remove any production-specific conditionals or environment checks that could suppress the link. Verify the retry button is shown when phase === 'timeout' or phase === 'error'. Ensure the loading state correctly prevents flickering during the admin check."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Ensure the AdminDashboard page renders the collection creation form and NFT management tabs correctly in production without environment-specific code paths preventing UI from loading",
+      "acceptanceCriteria": [
+        "The AdminDashboard page displays the Collections tab with the ability to create a new collection via AdminCollectionForm.",
+        "The AdminDashboard page displays the NFTs tab with the ability to create/edit NFTs via AdminNFTForm.",
+        "The admin dashboard works identically in both draft and live deployments."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboard.tsx",
+          "operation": "modify",
+          "description": "Audit the AdminDashboard component to ensure no environment-specific conditionals or build-time flags prevent the UI from rendering in production. Verify that the phase-based rendering logic correctly shows the dashboard content when phase === 'confirmed' && isAdmin === true. Ensure the Tabs component with Collections and NFTs tabs is always rendered for confirmed admins. Remove any dead code paths or debug-only conditionals that could cause discrepancies between draft and live deployments."
         },
         {
-          "path": "frontend/src/hooks/useCreateBlogPost.ts",
+          "path": "frontend/src/components/AdminCollectionForm.tsx",
           "operation": "modify",
-          "description": "Fix the stub implementation that throws errors. Since the blog feature has been replaced by the NFT system, ensure this hook returns a proper no-op mutation that doesn't crash the UI when called. Use useMutation from React Query with a queryFn that resolves successfully without making backend calls."
+          "description": "Review the AdminCollectionForm to ensure it renders and submits correctly in production. Verify that the form state, validation, and mutation hooks work identically in both environments. Check for any hardcoded environment checks or feature flags that could disable form functionality in production."
         },
         {
-          "path": "frontend/src/hooks/useSubmitContactForm.ts",
+          "path": "frontend/src/components/AdminNFTForm.tsx",
           "operation": "modify",
-          "description": "Fix the stub implementation that throws errors. Ensure this hook returns a proper no-op mutation that doesn't crash the UI. Use useMutation from React Query with a queryFn that resolves successfully, since the contact form backend is unavailable after the NFT system replacement."
+          "description": "Review the AdminNFTForm to ensure it renders and submits correctly in production. Verify that image upload, collection selection, and mutation hooks work identically in both draft and live environments. Check for any environment-specific logic that could prevent the form from functioning in production."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Audit and fix the useIsCallerAdminWithTimeout and useIsCallerAdmin hooks to ensure admin status is correctly detected without premature timeouts in production",
+      "acceptanceCriteria": [
+        "Admin status check completes successfully on the live deployment without prematurely hitting the timeout phase.",
+        "If the admin check fails or times out, a retry button is shown rather than silently hiding the Admin link.",
+        "Console errors related to admin status detection are resolved."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useIsCallerAdminWithTimeout.ts",
+          "operation": "modify",
+          "description": "Review and fix the timeout logic to ensure the 20-second timeout is appropriate for production network conditions. Verify that the hook correctly transitions between phases (checking → confirmed/timeout/error) and that the backend method checkIsAdmin is called correctly. Ensure proper error handling for network failures and that the retry function resets state correctly. Add console logging for debugging phase transitions if not already present."
         },
         {
-          "path": "frontend/src/hooks/useUploadArtwork.ts",
+          "path": "frontend/src/hooks/useIsCallerAdmin.ts",
           "operation": "modify",
-          "description": "Fix the stub implementation that throws errors. Since artwork uploads have been replaced by the NFT system, ensure this hook returns a proper no-op mutation. Use useMutation from React Query with a queryFn that resolves successfully without making backend calls."
-        },
-        {
-          "path": "frontend/src/pages/Contact.tsx",
-          "operation": "modify",
-          "description": "Update the contact form submission logic to handle the unavailable backend gracefully. Display a user-friendly message indicating that the contact feature is temporarily unavailable, or remove the submit functionality entirely if the contact form backend is permanently unavailable."
-        },
-        {
-          "path": "frontend/src/pages/BlogCreate.tsx",
-          "operation": "modify",
-          "description": "Update the blog creation form to handle the unavailable blog backend gracefully. Since the blog feature has been replaced by the NFT system, either disable the form with an informational message or remove the 'New Post' button visibility from the Blog page component."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Review router configuration for any missing route definitions or incorrect path patterns that could cause runtime errors. Ensure all imported page components exist and are properly exported. Verify ThemeProvider and Toaster wrapper configurations are correct."
+          "description": "Review the useIsCallerAdmin hook to ensure it correctly calls the backend isCallerAdmin method and handles responses properly. Verify that the query is enabled only when the actor is ready and the user is authenticated. Check for any race conditions or caching issues that could cause stale admin status in production."
         },
         {
           "path": "frontend/src/hooks/useActor.ts",
           "operation": "modify",
-          "description": "Review the actor initialization logic for potential race conditions or error handling issues. Ensure the admin token initialization doesn't cause deployment failures. Verify that actor creation handles network timeouts gracefully and that query invalidation logic doesn't cause infinite loops."
-        },
-        {
-          "path": "frontend/src/hooks/useInternetIdentity.ts",
-          "operation": "modify",
-          "description": "Review Internet Identity authentication flow for potential errors during login/logout. Ensure AuthClient initialization handles network issues gracefully and that identity state updates don't cause re-render loops. Verify error handling for 'User is already authenticated' cases."
-        },
-        {
-          "path": "frontend/index.html",
-          "operation": "modify",
-          "description": "Review HTML entry point for any missing meta tags, incorrect script references, or malformed markup that could prevent the app from loading. Ensure the root div ID matches what React mounts to in main.tsx."
-        },
-        {
-          "path": "frontend/src/main.tsx",
-          "operation": "modify",
-          "description": "Review the application entry point for proper QueryClient configuration, provider nesting order, and React root mounting. Ensure QueryClientProvider and InternetIdentityProvider are correctly configured and don't cause initialization errors."
+          "description": "Verify that the actor initialization and admin token handling work correctly in production. Ensure that the actor is properly cached and that dependent queries are invalidated when the actor changes. Check that the access control initialization does not interfere with subsequent admin status checks. Review any environment-specific configuration that could affect actor availability in production."
         }
       ]
     }
